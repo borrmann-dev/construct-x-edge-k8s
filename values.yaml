@@ -140,10 +140,10 @@ edc:
             paths:
               - path: "/semantics/registry(/|$)(.*)"
                 pathType: "Prefix"
-            tls:
-            - secretName: "dataprovider-x-dtr.tx.test-tls"
-              hosts:
-                - "dataprovider-x-dtr.construct-x.borrmann.dev"
+        tls:
+          - secretName: "dataprovider-x-dtr.tx.test-tls"
+            hosts:
+              - "dataprovider-x-dtr.construct-x.borrmann.dev"
       host: dataprovider-x-dtr.construct-x.borrmann.dev
 
   simple-data-backend:
