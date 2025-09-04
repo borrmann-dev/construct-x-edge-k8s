@@ -1,0 +1,37 @@
+apiVersion: v2
+name: edc
+description: Eclipse Dataspace Connector (EDC) for construct-x edge
+type: application
+version: 0.1.0
+appVersion: 0.1.0
+
+keywords:
+  - edc
+  - eclipse
+  - dataspace
+  - connector
+  - construct-x
+home: https://github.com/eclipse-edc/Connector
+sources:
+  - https://github.com/eclipse-edc/Connector
+maintainers:
+  - name: construct-x Team
+    email: team@construct-x.org
+
+dependencies:
+  - name: digital-twin-registry
+    version: 0.6.3
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    condition: digital-twin-registry.enabled
+  - name: simple-data-backend
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    version: 0.1.0
+    condition: simple-data-backend.enabled
+  - name: tractusx-connector
+    repository: https://eclipse-tractusx.github.io/charts/dev
+    version: 0.9.0
+    condition: tractusx-connector.enabled
+  - name: vault
+    version: 0.20.0
+    repository: https://helm.releases.hashicorp.com
+    condition: vault.enabled
