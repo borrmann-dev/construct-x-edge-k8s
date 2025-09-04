@@ -39,6 +39,12 @@ This is a Helm chart for the construct-x edge deployment, which includes EDC (Ec
   - Usage: `./uninstall.sh [OPTIONS]` - run with `--help` for full options
   - Safety: Requires confirmation by default, use `--force` to skip prompts
 
+## Troubleshooting
+- **File**: [helm_secret_size_issue.md](helm_secret_size_issue.md)
+- Resolution for Helm secret size limit errors (1MB limit)
+- Alternative installation approach for large charts
+
 ## Related Files
 - [ingress_configuration.md](ingress_configuration.md) - Details about ingress setup and configuration options
 - [certificate_management.md](certificate_management.md) - ClusterIssuer and SSL certificate configuration
+- [helm_secret_size_issue.md](helm_secret_size_issue.md) - Helm secret size troubleshooting guide

@@ -230,50 +230,121 @@ install_cert_manager() {
     fi
 }
 
-# Function to update chart dependencies
-update_dependencies() {
-    print_info "Updating chart dependencies..."
+# Function to install ClusterIssuer
+install_cluster_issuer() {
+    print_info "Checking ClusterIssuer installation..."
+    
+    # Check if ClusterIssuer already exists
+    if kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+        print_success "ClusterIssuer 'letsencrypt-prod' already exists"
+        return 0
+    fi
+    
+    print_info "Installing ClusterIssuer..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        print_warning "DRY RUN: Would install ClusterIssuer"
+        return 0
+    fi
     
     # Resolve absolute path for chart
     local chart_abs_path
     if [[ "$CHART_PATH" = /* ]]; then
-        # Already absolute path
         chart_abs_path="$CHART_PATH"
     else
-        # Convert relative path to absolute
         chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)" || {
+            print_error "Chart path does not exist: $CHART_PATH"
+            exit 1
+        }
+    fi
+    
+    # Render and apply ClusterIssuer template
+    if helm template "$chart_abs_path" --values "$VALUES_FILE" --show-only templates/clusterissuer.yaml | kubectl apply -f -; then
+        print_success "ClusterIssuer installed successfully"
+    else
+        print_error "ClusterIssuer installation failed"
+        exit 1
+    fi
+}
+
+# Function to install ingress-nginx
+install_ingress_nginx() {
+    print_info "Checking ingress-nginx installation..."
+    
+    # Check if ingress-nginx already exists
+    if helm list -n "$NAMESPACE" | grep -q "ingress-nginx"; then
+        print_success "ingress-nginx already installed in namespace '$NAMESPACE'"
+        return 0
+    fi
+    
+    print_info "Installing ingress-nginx..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        print_warning "DRY RUN: Would install ingress-nginx"
+        return 0
+    fi
+    
+    local ingress_cmd="helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace $NAMESPACE --create-namespace --set controller.service.type=LoadBalancer"
+    
+    if [[ "$VERBOSE" == true ]]; then
+        ingress_cmd="$ingress_cmd --debug"
+        print_info "Running: $ingress_cmd"
+    fi
+    
+    if $ingress_cmd; then
+        print_success "ingress-nginx installed successfully"
+        
+        # Wait for ingress controller to be ready
+        print_info "Waiting for ingress-nginx controller to be ready..."
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=ingress-nginx -n "$NAMESPACE" --timeout=300s
+        print_success "ingress-nginx is ready"
+    else
+        print_error "ingress-nginx installation failed"
+        exit 1
+    fi
+}
+
+# Function to update EDC chart dependencies
+update_edc_dependencies() {
+    print_info "Updating EDC chart dependencies..."
+    
+    # Resolve absolute path for EDC chart
+    local edc_chart_path="charts/edc"
+    local chart_abs_path
+    if [[ "$CHART_PATH" = /* ]]; then
+        chart_abs_path="$CHART_PATH/$edc_chart_path"
+    else
+        chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)/$edc_chart_path" || {
             print_error "Chart path does not exist or is not accessible: $CHART_PATH"
             exit 1
         }
     fi
     
-    print_info "Using chart path: $chart_abs_path"
+    print_info "Using EDC chart path: $chart_abs_path"
     
     # Check if Chart.yaml exists
     if [[ ! -f "$chart_abs_path/Chart.yaml" ]]; then
-        print_error "Chart.yaml not found at: $chart_abs_path/Chart.yaml"
-        print_info "Contents of chart directory:"
-        ls -la "$chart_abs_path" || print_error "Cannot list directory contents"
+        print_error "EDC Chart.yaml not found at: $chart_abs_path/Chart.yaml"
         exit 1
     fi
     
-    # Save current directory and change to chart path
+    # Save current directory and change to EDC chart path
     local original_dir=$(pwd)
     cd "$chart_abs_path"
     
-    print_info "Running helm dependency update in: $(pwd)"
+    print_info "Running helm dependency update for EDC chart in: $(pwd)"
     helm dependency update
     
     # Return to original directory
     cd "$original_dir"
     
-    print_success "Chart dependencies updated"
+    print_success "EDC chart dependencies updated"
 }
 
-# Function to validate the installation
+# Function to validate the EDC installation
 validate_installation() {
     if [[ "$DRY_RUN" == true ]]; then
-        print_info "Validating chart (dry-run)..."
+        print_info "Validating EDC chart (dry-run)..."
         
         # Check if cert-manager CRDs exist for proper validation
         if ! kubectl get crd clusterissuers.cert-manager.io &> /dev/null; then
@@ -283,12 +354,13 @@ validate_installation() {
             return 0
         fi
         
-        # Resolve absolute path for chart
+        # Resolve absolute path for EDC chart
+        local edc_chart_path="charts/edc"
         local chart_abs_path
         if [[ "$CHART_PATH" = /* ]]; then
-            chart_abs_path="$CHART_PATH"
+            chart_abs_path="$CHART_PATH/$edc_chart_path"
         else
-            chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)" || {
+            chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)/$edc_chart_path" || {
                 print_error "Chart path does not exist: $CHART_PATH"
                 exit 1
             }
@@ -302,35 +374,37 @@ validate_installation() {
         fi
         
         if $helm_cmd; then
-            print_success "Chart validation passed"
+            print_success "EDC chart validation passed"
         else
-            print_error "Chart validation failed"
+            print_error "EDC chart validation failed"
             exit 1
         fi
     fi
 }
 
-# Function to install the chart
-install_chart() {
+# Function to install the EDC chart (avoiding Helm secret size limit)
+install_edc_chart() {
     if [[ "$DRY_RUN" == true ]]; then
-        print_warning "DRY RUN: Skipping actual installation"
+        print_warning "DRY RUN: Would install EDC chart"
         return 0
     fi
     
-    print_info "Installing chart '$RELEASE_NAME' in namespace '$NAMESPACE'..."
+    print_info "Installing EDC chart '$RELEASE_NAME' in namespace '$NAMESPACE'..."
     
-    # Resolve absolute path for chart
+    # Resolve absolute path for EDC chart
+    local edc_chart_path="charts/edc"
     local chart_abs_path
     if [[ "$CHART_PATH" = /* ]]; then
-        chart_abs_path="$CHART_PATH"
+        chart_abs_path="$CHART_PATH/$edc_chart_path"
     else
-        chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)" || {
+        chart_abs_path="$(cd "$CHART_PATH" 2>/dev/null && pwd)/$edc_chart_path" || {
             print_error "Chart path does not exist: $CHART_PATH"
             exit 1
         }
     fi
     
-    local helm_cmd="helm install $RELEASE_NAME $chart_abs_path --namespace $NAMESPACE --values $VALUES_FILE --create-namespace"
+    # Use upgrade --install to handle both new installations and upgrades
+    local helm_cmd="helm upgrade --install $RELEASE_NAME $chart_abs_path --namespace $NAMESPACE --values $VALUES_FILE"
     
     if [[ "$VERBOSE" == true ]]; then
         helm_cmd="$helm_cmd --debug"
@@ -338,9 +412,15 @@ install_chart() {
     fi
     
     if $helm_cmd; then
-        print_success "Chart installed successfully"
+        print_success "EDC chart installed successfully"
+        
+        # Wait for key pods to be ready
+        print_info "Waiting for EDC components to be ready..."
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=tractusx-connector-controlplane -n "$NAMESPACE" --timeout=300s || print_warning "Controlplane pod not ready within timeout"
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=digital-twin-registry -n "$NAMESPACE" --timeout=300s || print_warning "Digital Twin Registry pod not ready within timeout"
+        print_success "EDC components are starting up"
     else
-        print_error "Chart installation failed"
+        print_error "EDC chart installation failed"
         exit 1
     fi
 }
@@ -369,8 +449,14 @@ show_post_install_info() {
     echo "  helm uninstall $RELEASE_NAME -n $NAMESPACE"
     echo
     
-    print_info "To upgrade the deployment:"
-    echo "  helm upgrade $RELEASE_NAME . -n $NAMESPACE --values $VALUES_FILE"
+    print_info "To upgrade the EDC deployment:"
+    echo "  helm upgrade $RELEASE_NAME charts/edc -n $NAMESPACE --values $VALUES_FILE"
+    echo
+    
+    print_info "To check ingress and certificates:"
+    echo "  kubectl get ingress -n $NAMESPACE"
+    echo "  kubectl get certificates -n $NAMESPACE"
+    echo "  kubectl get clusterissuer"
     echo
 }
 
@@ -381,14 +467,18 @@ main() {
     echo "========================================="
     echo
     
+    print_info "Multi-step installation approach to avoid Helm secret size limits"
+    echo
     
     check_prerequisites
     setup_helm_repositories
     create_namespace
     install_cert_manager
-    update_dependencies
+    install_cluster_issuer
+    install_ingress_nginx
+    update_edc_dependencies
     validate_installation
-    install_chart
+    install_edc_chart
     show_post_install_info
     
     if [[ "$DRY_RUN" == true ]]; then

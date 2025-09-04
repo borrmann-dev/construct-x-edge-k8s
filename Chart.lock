@@ -6,4 +6,4 @@ dependencies:
   repository: file://charts/edc
   version: 0.1.0
 digest: sha256:8cc9620d52cc001eab4c413e68835785d7194824a82630eb74db762b2a4b6359
-generated: "2025-09-04T11:40:36.06434882+02:00"
+generated: "2025-09-04T14:21:37.26312394+02:00"
