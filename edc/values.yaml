@@ -22,9 +22,9 @@ tractusx-connector:
     postgresql: true
     vault: false
   participant:
-    id: BPNL00000003AYRE
+    id: BPNL00000000080L
   iatp:
-    id: did:web:ssi-dim-wallet-stub.construct-x.net:BPNL00000003AYRE
+    id: did:web:ssi-dim-wallet-stub.construct-x.net:BPNL00000000080L
     trustedIssuers:
       - did:web:ssi-dim-wallet-stub.construct-x.net:BPNL00000003CRHK
     sts:
@@ -33,7 +33,7 @@ tractusx-connector:
       oauth:
         token_url: https://ssi-dim-wallet-stub.construct-x.net/oauth/token
         client:
-          id: BPNL00000003AYRE
+          id: BPNL00000000080L
           secret_alias: edc-wallet-secret
   controlplane:
     env:
@@ -62,14 +62,10 @@ tractusx-connector:
       readOnlyRootFilesystem: false
     resources:
       limits:
-        # -- Maximum CPU limit
         cpu: 1.5
-        # -- Maximum memory limit
         memory: 1024Mi
       requests:
-        # -- Initial CPU request
         cpu: 500m
-        # -- Initial memory request
         memory: 1024Mi
   dataplane:
     env:
