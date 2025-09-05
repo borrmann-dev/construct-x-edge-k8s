@@ -38,6 +38,69 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
+Expand the name of the chart.
+*/}}
+{{- define "construct-x-edge.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "construct-x-edge.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "construct-x-edge.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "construct-x-edge.labels" -}}
+helm.sh/chart: {{ include "construct-x-edge.chart" . }}
+{{ include "construct-x-edge.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "construct-x-edge.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "construct-x-edge.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "construct-x-edge.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "construct-x-edge.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Submodel URL helpers
 */}}
 {{- define "simple-data-backend.host" -}}
@@ -75,7 +138,7 @@ Submodel URL helpers
     {{ else }}
         {{- printf "%s%s%s" (include "registry.host" .) (include "registry.path" .) "/api/v3" }}
     {{- end }}
-{{- end }}'
+{{- end }}
 
 {{/*
 EDC URL helpers
@@ -130,3 +193,4 @@ EDC URL helpers
 {{- define "edc.bpn" -}}
     {{- index .Values "tractusx-connector" "participant" "id" }}
 {{- end }}
+
