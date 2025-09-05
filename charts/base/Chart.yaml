@@ -1,5 +1,5 @@
 apiVersion: v2
-name: base
+name: base-infrastructure
 description: Helm chart for base cluster infrastructure
 type: application
 version: 0.1.0

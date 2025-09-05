@@ -24,6 +24,21 @@ This is a Helm chart for the construct-x edge deployment, which includes EDC (Ec
 - Automatic certificate provisioning and renewal
 
 ### Installation & Uninstallation Scripts
+
+#### Base Infrastructure Scripts
+- **Install**: `charts/base/install.sh` - Base infrastructure Helm installation script
+  - Default namespace: `base-infrastructure`, Default release: `base-infra`
+  - Features: dependency management (ingress-nginx, cert-manager), namespace creation, error handling, dry-run support
+  - Prerequisites: kubectl, helm, Kubernetes cluster access
+  - Usage: `./install.sh [OPTIONS]` - run with `--help` for full options
+
+- **Uninstall**: `charts/base/uninstall.sh` - Safe base infrastructure uninstallation script
+  - Default namespace: `base-infrastructure`, Default release: `base-infra`
+  - Features: safety checks, confirmation prompts, optional namespace deletion, optional CRD purging, dry-run support
+  - Usage: `./uninstall.sh [OPTIONS]` - run with `--help` for full options
+  - Safety: Requires confirmation by default, use `--force` to skip prompts
+
+#### EDC Application Scripts
 - **Install**: `install.sh` - Comprehensive Helm installation script
   - Default namespace: `edc`, Default release: `eecc-edc`
   - Features: cert-manager auto-install, dependency management, namespace creation, error handling, dry-run support
