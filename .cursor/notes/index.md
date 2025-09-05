@@ -39,17 +39,23 @@ This is a Helm chart for the construct-x edge deployment, which includes EDC (Ec
   - Safety: Requires confirmation by default, use `--force` to skip prompts
 
 #### EDC Application Scripts
-- **Install**: `install.sh` - Comprehensive Helm installation script
+- **Install**: `edc/install.sh` - Focused Helm installation script for Eclipse Dataspace Connector only
   - Default namespace: `edc`, Default release: `eecc-edc`
-  - Features: cert-manager auto-install, dependency management, namespace creation, error handling, dry-run support
-  - Prerequisites: Automatically installs cert-manager if not present
-  - Usage: `./install.sh [OPTIONS]` - run with `--help` for full options
+  - Features: dependency management (tractusx-connector, digital-twin-registry, simple-data-backend, vault), namespace creation, error handling, dry-run support
+  - Prerequisites: Requires cert-manager and ingress controller to be installed separately
+  - Dependencies: Automatically handles Eclipse Tractus-X and HashiCorp Vault repositories
+  - Usage: `./edc/install.sh [OPTIONS]` - run with `--help` for full options
+  - Configuration: Uses `edc/values.yaml` by default, supports custom values files
+  - Scope: Installs only EDC components, does not install infrastructure
 
-- **Uninstall**: `uninstall.sh` - Safe Helm uninstallation script
+- **Uninstall**: `edc/uninstall.sh` - Safe Helm uninstallation script for EDC only
   - Default namespace: `edc`, Default release: `eecc-edc`
-  - Features: safety checks, confirmation prompts, optional namespace deletion, optional cert-manager removal, dry-run support
-  - Usage: `./uninstall.sh [OPTIONS]` - run with `--help` for full options
+  - Features: safety checks, confirmation prompts, optional namespace deletion, CRD purging, dry-run support
+  - Advanced cleanup: Handles PVCs, secrets, configmaps, and remaining resources
+  - Usage: `./edc/uninstall.sh [OPTIONS]` - run with `--help` for full options
   - Safety: Requires confirmation by default, use `--force` to skip prompts
+  - Scope: Removes only EDC components, does not affect cert-manager or ingress controller
+  - Dangerous option: `--purge-crds` for complete CRD cleanup
 
 ## Related Files
 - [ingress_configuration.md](ingress_configuration.md) - Details about ingress setup and configuration options

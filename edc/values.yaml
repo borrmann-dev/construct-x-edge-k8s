@@ -157,20 +157,13 @@ digital-twin-registry:
     ingress:
       enabled: true
       className: "nginx"
+      tls: true
       annotations:
         nginx.ingress.kubernetes.io/rewrite-target: /$2
         nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
         nginx.ingress.kubernetes.io/ssl-redirect: "false"
         cert-manager.io/cluster-issuer: letsencrypt-prod
-      hosts:
-        - host: "dataprovider-x-dtr.construct-x.borrmann.dev"
-          paths:
-            - path: "/semantics/registry(/|$)(.*)"
-              pathType: "Prefix"
-          tls:
-          - secretName: "dataprovider-x-dtr.tx.test-tls"
-            hosts:
-              - "dataprovider-x-dtr.construct-x.borrmann.dev"
+        nginx.ingress.kubernetes.io/use-regex: "true"
     host: dataprovider-x-dtr.construct-x.borrmann.dev
     authentication: false
     livenessProbe:

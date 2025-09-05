@@ -128,7 +128,7 @@ install_nginx_ingress() {
     print_status "Creating ingress namespace..."
     kubectl create namespace ingress --dry-run=client -o yaml | kubectl apply -f -
     
-    # Install nginx ingress controller
+    # Install nginx ingress controllerls
     print_status "Installing nginx ingress controller with Helm..."
     helm upgrade --install \
         ingress-nginx ingress-nginx/ingress-nginx \
@@ -140,6 +140,37 @@ install_nginx_ingress() {
     kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=controller -n ingress --timeout=300s
     
     print_success "nginx ingress controller installed successfully"
+}
+
+# Function to create ClusterIssuer for Let's Encrypt
+create_clusterissuer() {
+    print_status "Creating Let's Encrypt ClusterIssuer..."
+    
+    # Check if ClusterIssuer already exists
+    if kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+        print_warning "ClusterIssuer 'letsencrypt-prod' already exists"
+        return 0
+    fi
+    
+    # Create the ClusterIssuer
+    cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: dennis@borrmann.dev
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+EOF
+    
+    print_success "ClusterIssuer 'letsencrypt-prod' created successfully"
 }
 
 # Function to verify installations
@@ -162,6 +193,14 @@ verify_installations() {
         return 1
     fi
     
+    # Check ClusterIssuer
+    if kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+        print_success "ClusterIssuer 'letsencrypt-prod' is available"
+    else
+        print_error "ClusterIssuer verification failed"
+        return 1
+    fi
+    
     # Show service information
     print_status "Nginx ingress controller service information:"
     kubectl get svc -n ingress ingress-nginx-controller
@@ -178,6 +217,9 @@ main() {
     # Install components
     install_certmanager
     install_nginx_ingress
+    
+    # Create ClusterIssuer
+    create_clusterissuer
     
     # Verify installations
     verify_installations

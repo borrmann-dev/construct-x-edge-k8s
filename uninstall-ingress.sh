@@ -56,6 +56,7 @@ confirm_uninstall() {
     print_warning "This will uninstall the entire ingress stack including:"
     echo "  - nginx ingress controller (from 'ingress' namespace)"
     echo "  - cert-manager (from 'cert-manager' namespace)"
+    echo "  - ClusterIssuer 'letsencrypt-prod'"
     echo "  - All associated CRDs and resources"
     echo ""
     print_warning "This action cannot be undone!"
@@ -105,6 +106,26 @@ check_existing_certificates() {
             print_status "Uninstall cancelled by user"
             exit 0
         fi
+    fi
+}
+
+# Function to remove ClusterIssuer
+remove_clusterissuer() {
+    print_status "Checking for ClusterIssuer 'letsencrypt-prod'..."
+    
+    if kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+        print_status "Removing ClusterIssuer 'letsencrypt-prod'..."
+        kubectl delete clusterissuer letsencrypt-prod --ignore-not-found=true
+        print_success "ClusterIssuer 'letsencrypt-prod' removed"
+    else
+        print_warning "ClusterIssuer 'letsencrypt-prod' not found, skipping"
+    fi
+    
+    # Also remove the associated secret if it exists
+    if kubectl get secret letsencrypt-prod -n cert-manager &> /dev/null; then
+        print_status "Removing Let's Encrypt private key secret..."
+        kubectl delete secret letsencrypt-prod -n cert-manager --ignore-not-found=true
+        print_success "Let's Encrypt private key secret removed"
     fi
 }
 
@@ -223,6 +244,13 @@ verify_uninstall() {
     else
         print_warning "cert-manager helm release still exists"
     fi
+    
+    # Check ClusterIssuer
+    if kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+        print_warning "ClusterIssuer 'letsencrypt-prod' still exists"
+    else
+        print_success "ClusterIssuer 'letsencrypt-prod' removed"
+    fi
 }
 
 # Main execution
@@ -238,8 +266,9 @@ main() {
     check_existing_ingress_resources
     check_existing_certificates
     
-    # Uninstall components (order matters: nginx first, then cert-manager)
+    # Uninstall components (order matters: nginx first, then ClusterIssuer, then cert-manager)
     uninstall_nginx_ingress
+    remove_clusterissuer
     uninstall_certmanager
     
     # Cleanup
