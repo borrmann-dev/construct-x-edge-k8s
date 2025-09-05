@@ -1,0 +1,14 @@
+apiVersion: v2
+name: base
+description: Helm chart for base cluster infrastructure
+type: application
+version: 0.1.0
+appVersion: 0.1.0
+
+dependencies:
+  - name: ingress-nginx
+    version: 4.8.3
+    repository: https://kubernetes.github.io/ingress-nginx
+  - name: cert-manager
+    version: 1.11.1
+    repository: https://charts.jetstack.io

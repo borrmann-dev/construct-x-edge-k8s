@@ -4,13 +4,10 @@
 This is a Helm chart for the construct-x edge deployment, which includes EDC (Eclipse Dataspace Connector) and weather application components.
 
 ## Files and Structure
-- `Chart.yaml` - Helm chart metadata and dependencies (includes ingress-nginx)
-- `values.yaml` - Configuration values for all chart components
-- `install.sh` - Automated Helm installation script with proper error handling
-- `uninstall.sh` - Safe Helm uninstallation script with confirmation prompts
-- `templates/ingress.yaml` - Ingress resource template for routing traffic
-- `templates/clusterissuer.yaml` - ClusterIssuer template for SSL certificate management
-- `charts/` - Chart dependencies (ingress-nginx)
+- `charts/base/Chart.yaml` - Base infrastructure chart metadata and dependencies (ingress-nginx, cert-manager)
+- `charts/base/values.yaml` - Infrastructure configuration (ingress controller, cert-manager, ClusterIssuer)
+- `charts/base/templates/clusterissuer.yaml` - ClusterIssuer template for SSL certificate management
+- `charts/edc/` - EDC application chart with its own ingress configurations
 
 ## Key Components
 

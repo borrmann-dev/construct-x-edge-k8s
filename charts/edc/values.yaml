@@ -3,84 +3,115 @@ configuration:
   postgrespass: &postgrespass testpass
   edcKey: &edcKey TEST
 
-nameOverride: ""
+nameOverride: "dataprovider-x"
 fullnameOverride: ""
-seedTestdata: false  # Toggle seeding of testdata. Can be enabled when the edc should be seeded with testdata on startup.
+seedTestdata: true  # Toggle seeding of testdata. Can be enabled when the edc should be seeded with testdata on startup.
 testdataConfigMap: ""  # Provide a custom configmap for post-install-job-upload-testdata.yaml.
-backendUrl: ""  # Override the backend service url
-registryUrl: ""  # Override the digital twin registry url
-controlplanePublicUrl: ""  # Override the edc controlplane protocol url
-controlplaneManagementUrl: ""  # Override the edc controlplane management url
-dataplaneUrl: ""  # Override the edc dataplane public url
+backendUrl: "http://{{ .Release.Name }}-dataprovider-x-submodelserver:8080"  # Override the backend service url
+registryUrl: "http://{{ .Release.Name }}-dataprovider-x-dtr:8080/api/v3"  # Override the digital twin registry url
+controlplanePublicUrl: "http://{{ .Release.Name }}-dataprovider-x-edc-controlplane:8084"  # Override the edc controlplane protocol url
+controlplaneManagementUrl: "http://{{ .Release.Name }}-dataprovider-x-edc-controlplane:8081"  # Override the edc controlplane management url
+dataplaneUrl: "http://{{ .Release.Name }}-dataprovider-x-edc-dataplane:8081"  # Override the edc dataplane public url
 secrets:
   edc-wallet-secret: changeme
 
 tractusx-connector:
+  nameOverride: dataprovider-x-edc
   enabled: true
   install:
     postgresql: true
     vault: false
   participant:
-    id: changeme
+    id: BPNL00000003AYRE
   iatp:
-    id: changeme
+    id: did:web:ssi-dim-wallet-stub.construct-x.net:BPNL00000003AYRE
     trustedIssuers:
-      - changeme
+      - did:web:ssi-dim-wallet-stub.construct-x.net:BPNL00000003CRHK
     sts:
       dim:
-        url: http://example.org
+        url: https://ssi-dim-wallet-stub.construct-x.net/api/sts
       oauth:
-        token_url: http://example.org
+        token_url: https://ssi-dim-wallet-stub.construct-x.net/oauth/token
         client:
-          id: changeme
-          secret_alias: client-secret
+          id: BPNL00000003AYRE
+          secret_alias: edc-wallet-secret
   controlplane:
-    ingresses:
-      - enabled: false
+    env:
+      TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.construct-x.net/api
+      EDC_IAM_DID_WEB_USE_HTTPS: false
     bdrs:
       server:
-        url: http://example.org
+        url: https://ssi-dim-wallet-stub.construct-x.net/api/v1/directory
     endpoints:
       management:
-        authKey: *edcKey
+        authKey: TEST2
+    ingresses:
+      - enabled: true
+        annotations: 
+          nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hostname: "dataprovider-x-controlplane.construct-x.borrmann.dev"
+        endpoints:
+          - default
+          - protocol
+          - management
+        className: "nginx"
+        tls:
+          enabled: true
     securityContext:
       readOnlyRootFilesystem: false
     resources:
       limits:
-          cpu: 1.5
-          memory: 2048Mi
-      requests:
-        cpu: 500m
+        # -- Maximum CPU limit
+        cpu: 1.5
+        # -- Maximum memory limit
         memory: 1024Mi
-
-
+      requests:
+        # -- Initial CPU request
+        cpu: 500m
+        # -- Initial memory request
+        memory: 1024Mi
   dataplane:
+    env:
+      TX_IAM_IATP_CREDENTIALSERVICE_URL: https://ssi-dim-wallet-stub.construct-x.net/api
+      EDC_IAM_DID_WEB_USE_HTTPS: false
     ingresses:
-      - enabled: false
+      - enabled: true
+        annotations: 
+          nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hostname: "dataprovider-x-dataplane.construct-x.borrmann.dev"
+        endpoints:
+          - default
+          - public
+        className: "nginx"
+        tls:
+          enabled: true
     token:
       signer:
-        privatekey_alias: changeme
+        privatekey_alias: tokenSignerPrivateKey
       verifier:
-        publickey_alias: changeme
+        publickey_alias: tokenSignerPublicKey
     resources:
       limits:
         cpu: 1.5
         memory: 1024Mi
       requests:
         cpu: 500m
-        memory: 500Mi
+        memory: 1024Mi
 
   vault:
     hashicorp:
-      url: http://{{ .Release.Name }}-edc-provider-vault:8200
+      url: http://edc-dataprovider-x-vault:8200
       token: "root"
     secretNames:
-      transferProxyTokenSignerPrivateKey: changeme
-      transferProxyTokenSignerPublicKey: changeme
-      transferProxyTokenEncryptionAesKey: aesKey
+      transferProxyTokenSignerPrivateKey: tokenSignerPrivateKey
+      transferProxyTokenSignerPublicKey: tokenSignerPublicKey
+      transferProxyTokenEncryptionAesKey: tokenEncryptionAesKey
 
   postgresql:
-    nameOverride: edc-postgresql
+    nameOverride: dataprovider-x-db
+    jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-dataprovider-x-db:5432/edc"
     primary:
       persistence:
         enabled: false
@@ -88,11 +119,10 @@ tractusx-connector:
     auth:
       database: edc
       username: *postgresuser
-      postgresPassword: *postgrespass
-      password: *postgrespass
+      password: "dbpasswordtxdataprovider-x"
+      postgresPassword: "dbpasswordtxdataprovider-x"
     username: *postgresuser
-    password: *postgrespass
-    jdbcUrl: "jdbc:postgresql://{{ .Release.Name }}-edc-postgresql:5432/edc"
+    password: "dbpasswordtxdataprovider-x"
     resources:
       limits:
           cpu: 500m
@@ -102,12 +132,15 @@ tractusx-connector:
         memory: 256Mi
 
 digital-twin-registry:
+  nameOverride: dataprovider-x-dtr
   enabled: true
   enableKeycloak: false
 
   postgresql:
+    nameOverride: dataprovider-x-dtr-db
     auth:
-      existingSecret: registry-db-postresinit
+      password: "dbpassworddtrdataprovider-x"
+      existingSecret: dataprovider-x-secret-dtr-postgres-init
     primary:
       persistence:
         enabled: false
@@ -121,9 +154,24 @@ digital-twin-registry:
         memory: 256Mi
 
   registry:
-    host: digital-twin-registry.test
     ingress:
-      enabled: false
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      hosts:
+        - host: "dataprovider-x-dtr.construct-x.borrmann.dev"
+          paths:
+            - path: "/semantics/registry(/|$)(.*)"
+              pathType: "Prefix"
+          tls:
+          - secretName: "dataprovider-x-dtr.tx.test-tls"
+            hosts:
+              - "dataprovider-x-dtr.construct-x.borrmann.dev"
+    host: dataprovider-x-dtr.construct-x.borrmann.dev
     authentication: false
     livenessProbe:
       failureThreshold: 10
@@ -135,11 +183,25 @@ digital-twin-registry:
       periodSeconds: 10
 
 simple-data-backend:
+  nameOverride: dataprovider-x-submodelserver
   enabled: true
   image:
     tag: "main"
   ingress:
-    enabled: false
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    className: "nginx"
+    tls:
+      - secretName: "submodelserver.tx.constructx-tls"
+        hosts:
+          - "dataprovider-x-submodelserver.construct-x.borrmann.dev"
+    hosts:
+      - host: "dataprovider-x-submodelserver.construct-x.borrmann.dev"
+        paths:
+          - path: "/"
+            pathType: "Prefix"
   resources:
     limits:
       cpu: 500m
@@ -149,20 +211,13 @@ simple-data-backend:
       memory: 1024Mi
 
 vault:
+  nameOverride: edc-dataprovider-x-vault
+  fullnameOverride: edc-dataprovider-x-vault
   enabled: true
-  nameOverride: edc-provider-vault
   injector:
     enabled: false
   server:
-    postStart:
-      - sh
-      - -c
-      - |-
-        {
-        sleep 5
-        /bin/vault kv put secret/client-secret content=kEmH7QRPWhKfy8f+x0pFMw==
-        /bin/vault kv put secret/aesKey content=YWVzX2VuY2tleV90ZXN0Cg==
-        }
+    postStart: []
     dev:
       enabled: true
       devRootToken: root
