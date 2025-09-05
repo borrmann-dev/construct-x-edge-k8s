@@ -1,339 +1,442 @@
 # Construct-X Edge Deployment
 
-A comprehensive Helm chart for deploying the construct-x edge infrastructure with Eclipse Dataspace Connector (EDC) and supporting services.
+A comprehensive Helm-based deployment for Eclipse Dataspace Connector (EDC) with complete lifecycle management including installation, upgrade, and uninstallation capabilities.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Kubernetes cluster (1.24+)
-- Helm 3.8+
-- kubectl configured for your cluster
-- Domain with DNS pointing to your cluster
+- **Kubernetes cluster** (1.24+)
+- **Helm** 3.8+
+- **kubectl** configured for your cluster
+- **jq** (for upgrade script JSON parsing)
+- **Domain** with DNS pointing to your cluster
 
-### Installation
+### Complete Installation
 
-1. **Clone and navigate to the repository**
-   ```bash
-   git clone <repository-url>
-   cd construct-x
-   ```
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd construct-x
 
-2. **Configure your values**
-   ```bash
-   # Edit values.yaml to match your domain and configuration
-   vim values.yaml
-   ```
+# 2. Install ingress controller (if not already installed)
+./install-ingress.sh
 
-3. **Install with the automated script**
-   ```bash
-   # Make script executable
-   chmod +x install.sh
+# 3. Configure EDC settings
+vim edc/values.yaml  # Update domains and configuration
 
-   # Test installation (dry-run)
-   ./install.sh --dry-run
+# 4. Install EDC with all components
+cd edc
+./install.sh
 
-   # Actual installation
-   ./install.sh
-   ```
+# 5. Verify installation
+kubectl get pods -n edc
+kubectl get ingress -n edc
+```
 
 ## 📋 What Gets Deployed
 
-### Core Components
+### 🔗 Eclipse Dataspace Connector (EDC) Components
 
-- **🔗 Eclipse Dataspace Connector (EDC)**
-  - Control Plane: `dataprovider-x-controlplane.construct-x.borrmann.dev`
-  - Data Plane: `dataprovider-x-dataplane.construct-x.borrmann.dev`
+| Component | Purpose | External URL |
+|-----------|---------|--------------|
+| **EDC Controlplane** | DSP Protocol, Management API | `dataprovider-x-controlplane.construct-x.borrmann.dev` |
+| **EDC Dataplane** | Data Transfer, Public API | `dataprovider-x-dataplane.construct-x.borrmann.dev` |
+| **Digital Twin Registry** | Asset Registry | `dataprovider-x-dtr.construct-x.borrmann.dev` |
+| **Submodel Server** | Data Backend | `dataprovider-x-submodelserver.construct-x.borrmann.dev` |
 
-- **🗃️ Digital Twin Registry**
-  - Registry API: `dataprovider-x-dtr.construct-x.borrmann.dev/semantics/registry`
+### 🏗️ Supporting Infrastructure
 
-- **📊 Simple Data Backend**
-  - Submodel Server: `dataprovider-x-submodelserver.construct-x.borrmann.dev`
-
-### Infrastructure Components
-
-- **🔐 HashiCorp Vault** - Secrets management
-- **🐘 PostgreSQL** - Database for EDC and DTR
-- **🌐 Ingress-nginx** - Load balancer and ingress controller
+- **🔐 HashiCorp Vault** - Secrets management for EDC keys
+- **🐘 PostgreSQL** - Database for EDC and Digital Twin Registry
+- **🌐 Ingress Controller** - nginx-ingress for external access
 - **🔒 cert-manager** - Automatic SSL certificates via Let's Encrypt
-- **📜 ClusterIssuer** - Let's Encrypt certificate issuer
 
 ## ⚙️ Configuration
 
-### Main Configuration (`values.yaml`)
+### Main Configuration (`edc/values.yaml`)
+
+Key settings to customize before deployment:
 
 ```yaml
-# Ingress configuration (disabled - services create their own)
-ingress:
-  enabled: false
-  host: construct-x.borrmann.dev
+# EDC Participant Configuration
+tractusx-connector:
+  participant:
+    id: BPNL00000000080L  # Your Business Partner Number
+  
+  # Ingress hostnames (update these!)
+  controlplane:
+    ingresses:
+      - hostname: "dataprovider-x-controlplane.your-domain.com"
+  
+  dataplane:
+    ingresses:
+      - hostname: "dataprovider-x-dataplane.your-domain.com"
 
-# SSL Certificate issuer
-clusterIssuer:
-  enabled: true
-  name: letsencrypt-prod
-  email: your-email@domain.com
+# Digital Twin Registry
+digital-twin-registry:
+  registry:
+    host: dataprovider-x-dtr.your-domain.com
 
-# EDC configuration
-edc:
-  enabled: true
-  seedTestdata: true
-  # ... detailed EDC configuration
+# Submodel Server
+simple-data-backend:
+  ingress:
+    hosts:
+      - host: "dataprovider-x-submodelserver.your-domain.com"
+
+# Test data seeding (disable in production)
+seedTestdata: true
 ```
 
-### Key Configuration Options
+## 🛠️ Lifecycle Management
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `clusterIssuer.email` | Email for Let's Encrypt certificates | `dennis@borrmann.dev` |
-| `ingress.host` | Base domain for services | `construct-x.borrmann.dev` |
-| `edc.enabled` | Enable EDC deployment | `true` |
-| `edc.seedTestdata` | Seed with test data | `true` |
+### Installation (`edc/install.sh`)
 
-## 🛠️ Installation Scripts
-
-### Install Script (`install.sh`)
-
-Comprehensive installation script with the following features:
-
-- **Automatic dependency management**
-- **cert-manager installation** if not present
-- **Helm repository setup** (ingress-nginx, jetstack, hashicorp, tractusx-dev)
-- **Namespace creation** (default: `edc`)
-- **Error handling and validation**
-- **Dry-run support**
-
-#### Usage
+Complete EDC installation with automatic dependency management:
 
 ```bash
 # Basic installation
-./install.sh
+./edc/install.sh
 
-# Install in different namespace
-./install.sh -n production
+# Custom namespace and release name
+./edc/install.sh -n production -r prod-edc
 
-# Custom release name
-./install.sh -r my-edc-deployment
+# Dry run to preview changes
+./edc/install.sh --dry-run
 
-# Dry run (test without installing)
-./install.sh --dry-run
-
-# Verbose output for debugging
-./install.sh --verbose
+# Skip dependency updates (if already current)
+./edc/install.sh --skip-deps
 
 # Show all options
-./install.sh --help
+./edc/install.sh --help
 ```
 
-### Uninstall Script (`uninstall.sh`)
+**Features:**
+- ✅ Automatic Helm repository management
+- ✅ Dependency resolution and updates
+- ✅ Namespace creation
+- ✅ Error handling and validation
+- ✅ Dry-run support for testing
 
-Safe uninstallation with confirmation prompts:
+### Upgrade (`edc/upgrade.sh`) 🆕
+
+**NEW**: Comprehensive upgrade system with backup and rollback capabilities:
 
 ```bash
-# Basic uninstallation
-./uninstall.sh
+# Basic upgrade with automatic backup
+./edc/upgrade.sh
+
+# Upgrade to specific version
+./edc/upgrade.sh --version 0.2.0
+
+# Dry run to preview upgrade
+./edc/upgrade.sh --dry-run
+
+# Force upgrade without confirmation (for automation)
+./edc/upgrade.sh --force
+
+# Rollback to previous version
+./edc/upgrade.sh --rollback 1
+
+# Custom backup directory
+./edc/upgrade.sh --backup-dir /path/to/backups
+```
+
+**Key Features:**
+- 🔄 **Automatic Backup**: Creates timestamped backups before upgrade
+- 📦 **Version Control**: Optional target version specification
+- ↩️ **Easy Rollback**: Rollback to any previous revision
+- 🛡️ **Safety Checks**: Confirmation prompts and dry-run mode
+- 📊 **Comprehensive Backup**: Helm values, manifests, and K8s resources
+
+**Backup Structure:**
+```
+./backups/YYYY-MM-DD_HH-MM-SS_eecc-edc/
+├── backup_info.txt           # Backup metadata
+├── helm_release_all.yaml     # Complete Helm release info
+├── helm_values.yaml          # Current values
+├── helm_manifest.yaml        # Deployed manifests
+├── helm_history.json         # Release history
+├── k8s_resources.yaml        # All Kubernetes resources
+├── k8s_configmaps.yaml       # ConfigMaps
+├── k8s_secrets.yaml          # Secrets
+├── k8s_pvcs.yaml            # Persistent Volume Claims
+└── k8s_ingress.yaml         # Ingress resources
+```
+
+### Uninstallation (`edc/uninstall.sh`)
+
+Safe removal with advanced cleanup options:
+
+```bash
+# Basic uninstallation (with confirmation)
+./edc/uninstall.sh
 
 # Remove namespace as well
-./uninstall.sh --delete-namespace
+./edc/uninstall.sh --delete-namespace
 
-# Remove cert-manager too (use with caution!)
-./uninstall.sh --remove-cert-manager
+# Force removal without prompts
+./edc/uninstall.sh --force
 
-# Skip confirmation prompts
-./uninstall.sh --force
+# Advanced cleanup including CRDs (use with caution!)
+./edc/uninstall.sh --purge-crds
 
-# Show what would be deleted
-./uninstall.sh --dry-run
+# Dry run to see what would be removed
+./edc/uninstall.sh --dry-run
 ```
+
+## 🌐 Infrastructure Management
+
+### Ingress Controller
+
+Standalone ingress controller management:
+
+```bash
+# Install nginx-ingress controller
+./install-ingress.sh
+
+# Remove ingress controller
+./uninstall-ingress.sh
+```
+
+The ingress controller is installed separately to allow independent lifecycle management.
 
 ## 🏗️ Architecture
 
-### Chart Structure
+### Project Structure
 
 ```
 construct-x/
-├── Chart.yaml                 # Main umbrella chart
-├── values.yaml               # Configuration values
-├── install.sh                # Installation script
-├── uninstall.sh              # Uninstallation script
-├── templates/
-│   ├── clusterissuer.yaml    # Let's Encrypt issuer
-│   ├── ingress.yaml          # Main ingress (disabled)
-│   └── _helpers.tpl          # Template helpers
-└── charts/
-    └── edc/                  # EDC sub-chart
-        ├── Chart.yaml        # EDC chart definition
-        ├── values.yaml       # EDC configuration
-        └── templates/        # EDC templates
+├── edc/                          # EDC Helm chart and lifecycle scripts
+│   ├── Chart.yaml               # Chart metadata and dependencies
+│   ├── values.yaml              # EDC configuration
+│   ├── install.sh               # Installation script
+│   ├── upgrade.sh               # Upgrade script (NEW)
+│   ├── uninstall.sh             # Uninstallation script
+│   ├── charts/                  # Downloaded dependency charts
+│   └── templates/               # EDC-specific templates
+├── install-ingress.sh           # Ingress controller installation
+├── uninstall-ingress.sh         # Ingress controller removal
+└── README.md                    # This documentation
 ```
 
-### Dependencies
-
-The chart uses a nested structure:
+### Dependency Chain
 
 ```
-eecc-edc (Root Chart)
-├── ingress-nginx (External)
-└── edc (Local Sub-chart)
-    ├── digital-twin-registry (External)
-    ├── simple-data-backend (External)
-    ├── tractusx-connector (External)
-    └── vault (External)
+EDC Deployment (eecc-edc)
+├── tractusx-connector (Eclipse Tractus-X)
+│   ├── PostgreSQL database
+│   └── Controlplane + Dataplane
+├── digital-twin-registry (Eclipse Tractus-X)
+│   └── PostgreSQL database
+├── simple-data-backend (Eclipse Tractus-X)
+└── vault (HashiCorp)
 ```
 
-## 🌐 Service Endpoints
+### Network Architecture
 
-After successful deployment, the following endpoints will be available:
-
-| Service | URL | Purpose |
-|---------|-----|---------|
-| EDC Control Plane | `https://dataprovider-x-controlplane.construct-x.borrmann.dev` | DSP Protocol, Management API |
-| EDC Data Plane | `https://dataprovider-x-dataplane.construct-x.borrmann.dev` | Data Transfer, Public API |
-| Digital Twin Registry | `https://dataprovider-x-dtr.construct-x.borrmann.dev/semantics/registry` | Asset Registry |
-| Submodel Server | `https://dataprovider-x-submodelserver.construct-x.borrmann.dev` | Data Backend |
-
-All endpoints automatically get SSL certificates via Let's Encrypt.
+```
+Internet
+    ↓
+LoadBalancer (nginx-ingress)
+    ↓
+Ingress Resources (with SSL termination)
+    ↓
+┌─────────────────────────────────────────┐
+│ Kubernetes Cluster (namespace: edc)     │
+│                                         │
+│ ┌─────────────┐  ┌─────────────────────┐│
+│ │ EDC         │  │ Digital Twin        ││
+│ │ Controlplane│  │ Registry            ││
+│ └─────────────┘  └─────────────────────┘│
+│                                         │
+│ ┌─────────────┐  ┌─────────────────────┐│
+│ │ EDC         │  │ Submodel            ││
+│ │ Dataplane   │  │ Server              ││
+│ └─────────────┘  └─────────────────────┘│
+│                                         │
+│ ┌─────────────┐  ┌─────────────────────┐│
+│ │ HashiCorp   │  │ PostgreSQL          ││
+│ │ Vault       │  │ Databases           ││
+│ └─────────────┘  └─────────────────────┘│
+└─────────────────────────────────────────┘
+```
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
-1. **cert-manager CRDs missing**
-   ```bash
-   # The install script automatically handles this
-   ./install.sh  # Will install cert-manager if needed
-   ```
+#### 1. Certificate Issues
+```bash
+# Check certificate status
+kubectl get certificates -n edc
 
-2. **Dependency resolution errors**
-   ```bash
-   # Update dependencies manually
-   helm dependency update
-   cd charts/edc && helm dependency update
-   ```
+# Check ClusterIssuer
+kubectl get clusterissuers
 
-3. **Failed vault setup jobs**
-   ```bash
-   # Clean up failed jobs
-   kubectl delete jobs -n edc --all
-   kubectl delete pods -n edc --field-selector=status.phase=Failed
-   ```
+# View certificate events
+kubectl describe certificate <cert-name> -n edc
+```
+
+#### 2. Pod Startup Issues
+```bash
+# Check pod status
+kubectl get pods -n edc
+
+# View pod logs
+kubectl logs <pod-name> -n edc
+
+# Describe pod for events
+kubectl describe pod <pod-name> -n edc
+```
+
+#### 3. Helm Issues
+```bash
+# Check Helm release status
+helm status eecc-edc -n edc
+
+# View Helm release history
+helm history eecc-edc -n edc
+
+# Debug Helm template rendering
+helm template eecc-edc ./edc --debug
+```
+
+#### 4. Dependency Problems
+```bash
+# Update dependencies manually
+cd edc
+helm dependency update
+
+# Check dependency status
+helm dependency list
+```
 
 ### Debugging Commands
 
 ```bash
-# Check all pods
-kubectl get pods -n edc
+# Complete cluster overview
+kubectl get all -n edc
 
-# Check Helm releases
-helm list -n edc
-
-# Check ingresses and certificates
+# Check ingress and certificates
 kubectl get ingress,certificates -n edc
 
-# View logs of specific pod
-kubectl logs <pod-name> -n edc
+# View all events in namespace
+kubectl get events -n edc --sort-by='.lastTimestamp'
 
-# Check cert-manager
-kubectl get clusterissuers
-kubectl get certificates -A
+# Check persistent volumes
+kubectl get pv,pvc -n edc
+
+# Test internal connectivity
+kubectl run debug --image=busybox -it --rm -- sh
 ```
 
-## 🔄 Upgrading
+## 🔄 Upgrade Scenarios
 
-To upgrade the deployment:
+### Version Upgrade
 
 ```bash
-# Pull latest changes
-git pull
+# Check current version
+helm list -n edc
 
-# Upgrade with Helm
-helm upgrade eecc-edc . -n edc --values values.yaml
+# Upgrade to latest version
+./edc/upgrade.sh
 
-# Or use the install script (it will upgrade if already installed)
-./install.sh
+# Upgrade to specific version
+./edc/upgrade.sh --version 0.2.0
 ```
 
-## 🗑️ Uninstalling
-
-### Complete Removal
+### Configuration Changes
 
 ```bash
-# Remove everything including namespace
-./uninstall.sh --delete-namespace
+# Edit configuration
+vim edc/values.yaml
 
-# If you also want to remove cert-manager (affects other apps!)
-./uninstall.sh --delete-namespace --remove-cert-manager
+# Apply changes with backup
+./edc/upgrade.sh
 ```
 
-### Partial Removal
+### Rollback After Issues
 
 ```bash
-# Remove only the main deployment
-./uninstall.sh
+# Check available revisions
+helm history eecc-edc -n edc
 
-# Manual cleanup if needed
-helm uninstall eecc-edc -n edc
-kubectl delete namespace edc
+# Rollback to previous revision
+./edc/upgrade.sh --rollback 2
+
+# Or use Helm directly
+helm rollback eecc-edc 2 -n edc
 ```
 
-## 📝 Development
+## 🚀 Deployment Strategies
 
-### Local Development
+### Development Environment
 
-1. **Modify values**
-   ```bash
-   # Edit configuration
-   vim values.yaml
-   ```
+```bash
+# 1. Install with test data
+./edc/install.sh
 
-2. **Test changes**
-   ```bash
-   # Dry run to validate
-   ./install.sh --dry-run --verbose
-   ```
+# Configuration includes:
+# - seedTestdata: true
+# - Lower resource limits
+# - Development domains
+```
 
-3. **Apply changes**
-   ```bash
-   # Upgrade deployment
-   helm upgrade eecc-edc . -n edc --values values.yaml
-   ```
+### Production Environment
 
-### Adding New Services
+```bash
+# 1. Update configuration for production
+vim edc/values.yaml
+# Set:
+# - seedTestdata: false
+# - Production domains
+# - Appropriate resource limits
+# - Secure passwords
 
-1. Add dependency to `charts/edc/Chart.yaml`
-2. Configure in `values.yaml` under `edc:` section
-3. Test with dry-run
-4. Update this README
+# 2. Install with production settings
+./edc/install.sh
+
+# 3. Verify deployment
+kubectl get pods -n edc
+```
+
+### Staging Environment
+
+```bash
+# Use production-like configuration with staging domains
+# Test upgrade procedures before production
+./edc/upgrade.sh --dry-run
+```
 
 ## 📚 Additional Resources
 
-- [Eclipse Dataspace Connector Documentation](https://github.com/eclipse-edc/Connector)
-- [Tractus-X Charts Repository](https://github.com/eclipse-tractusx/charts)
-- [cert-manager Documentation](https://cert-manager.io/docs/)
-- [Helm Documentation](https://helm.sh/docs/)
+- **[Eclipse Dataspace Connector](https://github.com/eclipse-edc/Connector)** - Main EDC project
+- **[Eclipse Tractus-X Charts](https://github.com/eclipse-tractusx/charts)** - Helm charts repository
+- **[cert-manager Documentation](https://cert-manager.io/docs/)** - Certificate management
+- **[nginx-ingress Documentation](https://kubernetes.github.io/ingress-nginx/)** - Ingress controller
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test with `./install.sh --dry-run`
+4. Test with `./edc/install.sh --dry-run`
 5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+This project is licensed under the Apache License 2.0.
 
 ## 🆘 Support
 
 For issues and questions:
 
 1. Check the [Troubleshooting](#-troubleshooting) section
-2. Review the logs: `kubectl logs <pod-name> -n edc`
-3. Open an issue in the repository
-4. Contact the construct-x team
+2. Review pod logs: `kubectl logs <pod-name> -n edc`
+3. Check Helm status: `helm status eecc-edc -n edc`
+4. Open an issue in the repository
 
 ---
 
-**Note**: Replace `construct-x.borrmann.dev` with your actual domain in the configuration files before deployment.
+**⚠️ Important**: Update all domain names in `edc/values.yaml` to match your actual domains before deployment!

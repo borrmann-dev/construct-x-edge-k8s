@@ -1,65 +1,139 @@
 # Service Testing and Health Checks
 
-## Test Script: test-services.sh
+## Overview
+Comprehensive testing and validation procedures for the construct-x EDC deployment, including service reachability, SSL certificate validation, and Kubernetes resource health checks.
 
-A comprehensive script to test all construct-x services for reachability and SSL certificate validity.
+## Testing Approaches
 
-### Features
-- **External Service Testing**: Tests all public HTTPS endpoints
-- **Internal Service Testing**: Tests cluster-internal HTTP services (with `--internal` flag)
-- **SSL Certificate Validation**: Checks certificate issuer, expiration, and Let's Encrypt status
-- **Kubernetes Resource Checks**: Verifies ingresses, certificates, and ClusterIssuer
-- **Detailed Reporting**: Color-coded output with success/failure summary
+### Manual Testing Commands
 
-### Usage Examples
+#### External HTTPS Endpoints
 ```bash
-# Test external services only
-./test-services.sh
+# Test EDC Controlplane
+curl -k https://dataprovider-x-controlplane.construct-x.borrmann.dev/api/v1/dsp
 
-# Test with verbose output
-./test-services.sh --verbose
+# Test EDC Dataplane
+curl -k https://dataprovider-x-dataplane.construct-x.borrmann.dev/api/public
 
-# Test both external and internal services
-./test-services.sh --internal
+# Test Digital Twin Registry
+curl -k https://dataprovider-x-dtr.construct-x.borrmann.dev/semantics/registry
 
-# Use custom timeout
-./test-services.sh --timeout 30
+# Test Submodel Server
+curl -k https://dataprovider-x-submodelserver.construct-x.borrmann.dev
 ```
 
-### Tested Services
+#### Internal Service Testing
+```bash
+# Port-forward to test internal services
+kubectl port-forward -n edc svc/eecc-edc-tractusx-connector-controlplane 8080:8080
+curl http://localhost:8080/api/v1/dsp
 
-#### External HTTPS Services
-- **Digital Twin Registry**: `https://dataprovider-x-dtr.construct-x.borrmann.dev/semantics/registry`
-- **Simple Data Backend**: `https://dataprovider-x-submodelserver.construct-x.borrmann.dev`
-- **EDC Controlplane Protocol**: `https://dataprovider-x-controlplane.construct-x.borrmann.dev/api/v1/dsp`
-- **EDC Controlplane Management**: `https://dataprovider-x-controlplane.construct-x.borrmann.dev/management`
-- **EDC Dataplane Public**: `https://dataprovider-x-dataplane.construct-x.borrmann.dev/api/public`
+kubectl port-forward -n edc svc/eecc-edc-digital-twin-registry 8081:8080
+curl http://localhost:8081/api/v3
 
-#### Internal HTTP Services (with --internal flag)
-- **EDC Controlplane Internal**: `http://eecc-edc-tractusx-connector-controlplane.edc.svc.cluster.local:8080`
-- **EDC Dataplane Internal**: `http://eecc-edc-tractusx-connector-dataplane.edc.svc.cluster.local:8080`
-- **Digital Twin Registry Internal**: `http://eecc-edc-digital-twin-registry.edc.svc.cluster.local:8080`
-- **Simple Data Backend Internal**: `http://eecc-edc-simple-data-backend.edc.svc.cluster.local:8080`
-- **Vault Internal**: `http://eecc-edc-edc-provider-vault.edc.svc.cluster.local:8200`
+kubectl port-forward -n edc svc/eecc-edc-simple-data-backend 8082:8080
+curl http://localhost:8082
 
-### Certificate Validation
-The script specifically checks for:
-- **Let's Encrypt certificates**: Indicates proper ACME certificate issuance
-- **Fake certificates**: Warns when ingress controller is using self-signed certificates
-- **Certificate expiration**: Shows when certificates will expire
-- **Certificate chain validation**: Verifies SSL/TLS setup
+kubectl port-forward -n edc svc/eecc-edc-edc-dataprovider-x-vault 8200:8200
+curl http://localhost:8200/v1/sys/health
+```
 
-### Prerequisites
-- `kubectl` - Kubernetes CLI tool
-- `curl` - HTTP client for testing endpoints
-- `openssl` - SSL certificate inspection
-- Access to the Kubernetes cluster
+## Kubernetes Resource Validation
 
-### Integration with Install Script
-The test script complements the updated `install.sh` which now:
-1. Installs cert-manager
-2. Creates ClusterIssuer for Let's Encrypt
-3. Installs ingress-nginx separately
-4. Installs EDC chart with proper TLS configuration
+### Certificate and Ingress Checks
+```bash
+# Check certificate status
+kubectl get certificates -n edc
 
-This multi-step approach avoids the Helm secret size limit while ensuring proper certificate management.
+# Check ingress resources
+kubectl get ingress -n edc
+
+# Check ClusterIssuer
+kubectl get clusterissuers
+
+# Describe certificate for detailed status
+kubectl describe certificate <cert-name> -n edc
+```
+
+### Service and Pod Health
+```bash
+# Check all pods in EDC namespace
+kubectl get pods -n edc
+
+# Check services
+kubectl get svc -n edc
+
+# Check deployment status
+kubectl get deployments -n edc
+
+# View pod logs for troubleshooting
+kubectl logs -n edc <pod-name>
+```
+
+## SSL Certificate Validation
+
+### Certificate Inspection
+```bash
+# Check certificate details for external endpoints
+echo | openssl s_client -servername dataprovider-x-controlplane.construct-x.borrmann.dev -connect dataprovider-x-controlplane.construct-x.borrmann.dev:443 2>/dev/null | openssl x509 -noout -text
+
+# Check certificate expiration
+echo | openssl s_client -servername dataprovider-x-controlplane.construct-x.borrmann.dev -connect dataprovider-x-controlplane.construct-x.borrmann.dev:443 2>/dev/null | openssl x509 -noout -dates
+```
+
+### Certificate Validation Checklist
+- ✅ **Let's Encrypt certificates**: Proper ACME certificate issuance
+- ⚠️ **Self-signed certificates**: Indicates configuration issues
+- 📅 **Certificate expiration**: Monitor renewal status
+- 🔗 **Certificate chain**: Verify complete SSL/TLS setup
+
+## Health Check Integration
+
+### Post-Installation Validation
+After running `./edc/install.sh`, verify:
+
+1. **All pods are running**:
+   ```bash
+   kubectl get pods -n edc
+   ```
+
+2. **Certificates are issued**:
+   ```bash
+   kubectl get certificates -n edc
+   ```
+
+3. **External endpoints respond**:
+   ```bash
+   curl -k https://dataprovider-x-controlplane.construct-x.borrmann.dev/api/v1/dsp
+   ```
+
+### Post-Upgrade Validation
+After running `./edc/upgrade.sh`, verify:
+
+1. **All services are healthy**
+2. **No certificate issues**
+3. **Endpoints still respond correctly**
+4. **No pod restart loops**
+
+## Troubleshooting Common Issues
+
+### Certificate Problems
+- **Pending certificates**: Check DNS resolution and ingress controller
+- **Failed challenges**: Verify domain accessibility and firewall rules
+- **Expired certificates**: Check cert-manager logs and renewal process
+
+### Service Connectivity
+- **503 errors**: Check if backend pods are running
+- **Connection refused**: Verify service and ingress configuration
+- **SSL errors**: Check certificate status and ingress TLS configuration
+
+### Pod Issues
+- **CrashLoopBackOff**: Check pod logs and resource limits
+- **ImagePullBackOff**: Verify image availability and registry access
+- **Pending**: Check node resources and scheduling constraints
+
+## Prerequisites
+- **kubectl** - Kubernetes CLI tool configured for cluster access
+- **curl** - HTTP client for endpoint testing
+- **openssl** - SSL certificate inspection and validation
+- **jq** - JSON parsing (for upgrade script integration)
