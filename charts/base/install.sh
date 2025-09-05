@@ -69,14 +69,15 @@ EXAMPLES:
 DESCRIPTION:
     This script installs the base infrastructure chart which includes:
     - ingress-nginx controller
-    - cert-manager for SSL certificates
-    - ClusterIssuer for Let's Encrypt certificates
+    - cert-manager for SSL certificates (with CRDs)
+    - ClusterIssuer for Let's Encrypt certificates (post-install hook)
 
     The script will:
     1. Check prerequisites (kubectl, helm)
     2. Create namespace if it doesn't exist
     3. Update Helm dependencies (unless --skip-deps)
     4. Install the chart with specified configuration
+    5. ClusterIssuer will be created after cert-manager is ready
 
 EOF
 }
@@ -138,6 +139,7 @@ update_dependencies() {
         print_success "Dependencies updated"
     fi
 }
+
 
 # Function to install the chart
 install_chart() {
