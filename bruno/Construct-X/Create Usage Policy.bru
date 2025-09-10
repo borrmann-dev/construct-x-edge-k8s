@@ -1,0 +1,48 @@
+meta {
+  name: Create Usage Policy
+  type: http
+  seq: 5
+}
+
+post {
+  url: https://{{PROVIDER_BASE_URL}}/management/v3/policydefinitions
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-key
+  value: {{PROVIDER_API_PASSWORD}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": [
+      "https://w3id.org/tractusx/edc/v0.0.1",
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      }
+    ],
+    "@type": "PolicyDefinition",
+    "@id": "require-usage",
+    "policy": {
+      "@type": "Set",
+      "permission": [
+        {
+          "action": "use",
+          "constraint": {
+            "leftOperand": "BusinessPartnerNumber",
+            "operator": "eq",
+            "rightOperand": "{{CONSUMER_BPN}}"
+          }
+        }
+      ]
+    }
+  }
+}
+
+settings {
+  encodeUrl: true
+}

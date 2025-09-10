@@ -1,0 +1,16 @@
+meta {
+  name: provision
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/:flowId/:resourceId/provision
+  body: none
+  auth: inherit
+}
+
+params:path {
+  flowId: 
+  resourceId: 
+}

@@ -1,0 +1,15 @@
+meta {
+  name: requestAssetsV4
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/v4alpha/assets/request
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {}
+}

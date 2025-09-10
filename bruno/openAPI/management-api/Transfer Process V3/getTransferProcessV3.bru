@@ -1,0 +1,15 @@
+meta {
+  name: getTransferProcessV3
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/v3/transferprocesses/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

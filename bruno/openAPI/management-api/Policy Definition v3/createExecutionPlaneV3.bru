@@ -1,0 +1,21 @@
+meta {
+  name: createExecutionPlaneV3
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/v3/policydefinitions/:id/evaluationplan
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "policyScope": ""
+  }
+}

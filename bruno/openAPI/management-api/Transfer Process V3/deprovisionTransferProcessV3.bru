@@ -1,0 +1,20 @@
+meta {
+  name: deprovisionTransferProcessV3
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/v3/transferprocesses/:id/deprovision
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+script:post-response {
+  if (res.status === 204) {
+  }
+}

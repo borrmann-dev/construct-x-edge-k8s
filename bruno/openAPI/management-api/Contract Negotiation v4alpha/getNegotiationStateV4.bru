@@ -1,0 +1,15 @@
+meta {
+  name: getNegotiationStateV4
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/v4alpha/contractnegotiations/:id/state
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

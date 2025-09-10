@@ -1,0 +1,27 @@
+meta {
+  name: suspendTransferProcessV3
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/v3/transferprocesses/:id/suspend
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "@type": "",
+    "state": ""
+  }
+}
+
+script:post-response {
+  if (res.status === 204) {
+  }
+}

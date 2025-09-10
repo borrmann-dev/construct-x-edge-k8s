@@ -1,0 +1,15 @@
+meta {
+  name: getAssetV3
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/v3/assets/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

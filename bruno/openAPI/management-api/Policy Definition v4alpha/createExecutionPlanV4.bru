@@ -1,0 +1,19 @@
+meta {
+  name: createExecutionPlanV4
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/v4alpha/policydefinitions/:id/evaluationplan
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {}
+}

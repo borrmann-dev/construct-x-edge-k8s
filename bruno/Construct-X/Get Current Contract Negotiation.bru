@@ -1,0 +1,21 @@
+meta {
+  name: Get Current Contract Negotiation
+  type: http
+  seq: 10
+}
+
+get {
+  url: https://{{CONSUMER_BASE_URL}}/management/v3/contractnegotiations/{{CONTRACT_NEGOTIATION_ID}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-key
+  value: {{CONSUMER_API_PASSWORD}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

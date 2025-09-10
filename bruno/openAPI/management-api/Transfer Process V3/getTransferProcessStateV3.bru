@@ -1,0 +1,15 @@
+meta {
+  name: getTransferProcessStateV3
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/v3/transferprocesses/:id/state
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

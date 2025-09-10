@@ -1,0 +1,57 @@
+meta {
+  name: Initiate negotiation
+  type: http
+  seq: 9
+}
+
+post {
+  url: https://{{CONSUMER_BASE_URL}}/management/v3/contractnegotiations
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-key
+  value: {{CONSUMER_API_PASSWORD}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": [
+        "https://w3id.org/edc/connector/management/v0.0.1"
+    ],
+    "@type": "ContractRequest",
+    "counterPartyAddress": "https://{{PROVIDER_BASE_URL}}/api/v1/dsp",
+    "counterPartyId": "{{PROVIDER_BPN}}",
+    "protocol": "dataspace-protocol-http",
+    "policy": {
+        "@type": "Offer",
+        "@id": "{{POLICY_ASSET_ID}}",
+        "assigner": "{{PROVIDER_BPN}}",
+        "permission": [{
+          "action": "use",
+          "constraint": {
+            "leftOperand": "BusinessPartnerNumber",
+            "operator": "eq",
+            "rightOperand": "{{CONSUMER_BPN}}"
+          }
+        }],
+        "prohibition": [],
+        "obligation": [],
+        "target": "{{ASSET_ID}}"
+    },
+    "callbackAddresses": []
+  }
+}
+
+script:post-response {
+  if(res.getStatus() < 300 && res.getStatus() >= 200){
+        bru.setVar("CONTRACT_NEGOTIATION_ID", res.getBody()["@id"])
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+}

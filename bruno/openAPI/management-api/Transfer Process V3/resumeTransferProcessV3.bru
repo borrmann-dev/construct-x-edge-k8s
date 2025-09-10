@@ -1,0 +1,20 @@
+meta {
+  name: resumeTransferProcessV3
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/v3/transferprocesses/:id/resume
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+script:post-response {
+  if (res.status === 204) {
+  }
+}
