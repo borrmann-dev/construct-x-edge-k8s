@@ -1,0 +1,16 @@
+meta {
+  name: deprovision
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/:flowId/:resourceId/deprovision
+  body: none
+  auth: inherit
+}
+
+params:path {
+  flowId: 
+  resourceId: 
+}

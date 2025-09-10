@@ -1,0 +1,25 @@
+meta {
+  name: createAssetV3
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/v3/assets
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "@context": {},
+    "@id": "",
+    "@type": "",
+    "dataAddress": {
+      "@type": "",
+      "type": ""
+    },
+    "privateProperties": {},
+    "properties": {}
+  }
+}

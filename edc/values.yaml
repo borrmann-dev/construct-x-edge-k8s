@@ -129,7 +129,7 @@ tractusx-connector:
 
 digital-twin-registry:
   nameOverride: dataprovider-x-dtr
-  enabled: true
+  enabled: false
   enableKeycloak: false
 
   postgresql:
@@ -155,11 +155,8 @@ digital-twin-registry:
       className: "nginx"
       tls: true
       annotations:
-        nginx.ingress.kubernetes.io/rewrite-target: /$2
-        nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
         nginx.ingress.kubernetes.io/ssl-redirect: "false"
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        nginx.ingress.kubernetes.io/use-regex: "true"
     host: dataprovider-x-dtr.construct-x.borrmann.dev
     authentication: false
     livenessProbe:

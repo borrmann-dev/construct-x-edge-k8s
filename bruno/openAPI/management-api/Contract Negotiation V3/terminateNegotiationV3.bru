@@ -1,0 +1,28 @@
+meta {
+  name: terminateNegotiationV3
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/v3/contractnegotiations/:id/terminate
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "@id": "",
+    "@type": "",
+    "reason": ""
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+  }
+}

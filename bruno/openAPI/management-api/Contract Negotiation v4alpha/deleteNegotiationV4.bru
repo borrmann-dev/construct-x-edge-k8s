@@ -1,0 +1,20 @@
+meta {
+  name: deleteNegotiationV4
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/v4alpha/contractnegotiations/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+script:post-response {
+  if (res.status === 204) {
+  }
+}

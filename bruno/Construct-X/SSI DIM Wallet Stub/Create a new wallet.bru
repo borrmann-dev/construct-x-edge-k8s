@@ -1,0 +1,34 @@
+meta {
+  name: Create a new wallet
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://ssi-dim-wallet-stub.construct-x.inno-materna.de/api/dim/setup-dim?companyName={{COMPANY_NAME}}&bpn={{CONSUMER_BPN}}&didDocumentLocation=""
+  body: json
+  auth: bearer
+}
+
+params:query {
+  companyName: {{COMPANY_NAME}}
+  bpn: {{CONSUMER_BPN}}
+  didDocumentLocation: ""
+}
+
+headers {
+  Accept: */*
+}
+
+auth:bearer {
+  token: 
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  Create a new wallet with BPN and send the Did document back to portal backend. Everytime same wallet generated with bpn so same did document will be generated for a wallet.
+  
+}

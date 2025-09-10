@@ -1,0 +1,44 @@
+meta {
+  name: initiateTransferProcessV3
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v3/transferprocesses
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "@context": {},
+    "@type": "",
+    "assetId": "",
+    "callbackAddresses": [
+      {
+        "@type": "",
+        "authCodeId": "",
+        "authKey": "",
+        "events": [],
+        "transactional": false,
+        "uri": ""
+      }
+    ],
+    "contractId": "",
+    "counterPartyAddress": "",
+    "dataDestination": {
+      "@type": "",
+      "type": ""
+    },
+    "privateProperties": {},
+    "protocol": "",
+    "transferType": ""
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setVar('getTransferProcessStateV3_id', res.body.id);
+  }
+}

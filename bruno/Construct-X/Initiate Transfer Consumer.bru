@@ -1,0 +1,51 @@
+meta {
+  name: Initiate Transfer Consumer
+  type: http
+  seq: 12
+}
+
+post {
+  url: https://{{CONSUMER_BASE_URL}}/management/v3/transferprocesses
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-key
+  value: {{CONSUMER_API_PASSWORD}}
+  placement: header
+}
+
+body:json {
+  {
+      "@context": [
+          "https://w3id.org/edc/connector/management/v0.0.1"
+      ],
+      "assetId": "asset-1",
+    "counterPartyAddress": "https://{{PROVIDER_BASE_URL}}/api/v1/dsp",
+    "counterPartyId": "{{PROVIDER_BPN}}",
+      "contractId": "{{CONTRACT_NEGOTIATION_ID}}",
+      "dataDestination": {
+          "type": "HttpProxy"
+      },
+      "protocol": "dataspace-protocol-http",
+      "transferType": "HttpData-PULL"
+  }
+}
+
+script:pre-request {
+  if(!bru.hasVar("CONTRACT_NEGOTIATION_ID")){
+      throw new Error('Contract Agreement ID is not yet available, please execute requests "Initiate Negotiation and Get Contract Negotiation" first!');
+  }
+}
+
+script:post-response {
+  if(res.getStatus() < 300 && res.getStatus() >= 200){
+        bru.setVar("TRANSFER_PROCESS_ID", res.getBody()["@id"])
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+}

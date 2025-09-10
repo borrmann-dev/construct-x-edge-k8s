@@ -1,0 +1,15 @@
+meta {
+  name: deletePolicyDefinitionV3
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/v3/policydefinitions/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

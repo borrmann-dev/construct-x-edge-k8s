@@ -1,0 +1,15 @@
+meta {
+  name: queryPolicyDefinitionsV4
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/v4alpha/policydefinitions/request
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {}
+}

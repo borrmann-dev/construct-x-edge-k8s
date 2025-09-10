@@ -1,0 +1,15 @@
+meta {
+  name: updateAssetV4
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/v4alpha/assets
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {}
+}

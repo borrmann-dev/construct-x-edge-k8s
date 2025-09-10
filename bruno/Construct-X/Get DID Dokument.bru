@@ -1,0 +1,15 @@
+meta {
+  name: Get DID Dokument
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://ssi-dim-wallet-stub.construct-x.inno-materna.de/{{CONSUMER_BPN}}/did.json
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+}
