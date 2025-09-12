@@ -139,13 +139,16 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Consumer
+    participant EDC_Consumer as EDC Consumer
     participant EDC_Provider as EDC Provider
     participant DataSource as Data Source
 
-    Consumer->>EDC_Provider: GET {dataplane endpoint}<br/>Authorization: {auth code}
+    Consumer->>EDC_Consumer: GET {consumer dataplane endpoint}<br/>Authorization: {auth code}
+    EDC_Consumer->>EDC_Provider: GET {provider dataplane endpoint}<br/>Authorization: {provider auth}
     EDC_Provider->>DataSource: GET {configured data source URL}
     DataSource-->>EDC_Provider: 200 OK {actual data}
-    EDC_Provider-->>Consumer: 200 OK {proxied data}
+    EDC_Provider-->>EDC_Consumer: 200 OK {proxied data}
+    EDC_Consumer-->>Consumer: 200 OK {final data}
 ```
 
 ### Setup
