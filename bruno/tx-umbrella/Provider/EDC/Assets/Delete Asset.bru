@@ -1,0 +1,21 @@
+meta {
+  name: Delete Asset
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{providerUrl}}/management/v3/assets/{{assetId}}
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

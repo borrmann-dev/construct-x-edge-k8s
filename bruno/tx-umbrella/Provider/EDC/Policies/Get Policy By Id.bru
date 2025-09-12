@@ -1,0 +1,21 @@
+meta {
+  name: Get Policy By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{providerUrl}}/management/v3/policydefinitions/{{policyId}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

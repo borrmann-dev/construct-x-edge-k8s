@@ -19,8 +19,8 @@ A comprehensive Helm-based deployment for Eclipse Dataspace Connector (EDC) with
 git clone <repository-url>
 cd construct-x
 
-# 2. Install ingress controller (if not already installed)
-./install-ingress.sh
+# 2. Ensure ingress controller is available (managed separately)
+# Verify: kubectl get pods -n ingress-nginx
 
 # 3. Configure EDC settings
 vim edc/values.yaml  # Update domains and configuration
@@ -32,24 +32,25 @@ cd edc
 # 5. Verify installation
 kubectl get pods -n edc
 kubectl get ingress -n edc
+./test-deployment.sh  # Comprehensive deployment verification
 ```
 
 ## 📋 What Gets Deployed
 
 ### 🔗 Eclipse Dataspace Connector (EDC) Components
 
-| Component | Purpose | External URL |
-|-----------|---------|--------------|
-| **EDC Controlplane** | DSP Protocol, Management API | `dataprovider-x-controlplane.construct-x.borrmann.dev` |
-| **EDC Dataplane** | Data Transfer, Public API | `dataprovider-x-dataplane.construct-x.borrmann.dev` |
-| **Digital Twin Registry** | Asset Registry | `dataprovider-x-dtr.construct-x.borrmann.dev` |
-| **Submodel Server** | Data Backend | `dataprovider-x-submodelserver.construct-x.borrmann.dev` |
+| Component | Purpose | Status | External URL |
+|-----------|---------|--------|---------------|
+| **EDC Controlplane** | DSP Protocol, Management API | ✅ Active | `dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de` |
+| **EDC Dataplane** | Data Transfer, Public API | ✅ Active | `dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de` |
+| **Digital Twin Registry** | Asset Registry | ⚠️ Disabled | `dataprovider-x-dtr.construct-x.prod-k8s.eecc.de` |
+| **Submodel Server** | Data Backend | ⚠️ Disabled | `dataprovider-x-submodelserver.construct-x.prod-k8s.eecc.de` |
 
 ### 🏗️ Supporting Infrastructure
 
-- **🔐 HashiCorp Vault** - Secrets management for EDC keys
-- **🐘 PostgreSQL** - Database for EDC and Digital Twin Registry
-- **🌐 Ingress Controller** - nginx-ingress for external access
+- **🔐 HashiCorp Vault** - Secrets management for EDC keys (dev mode)
+- **🐘 PostgreSQL** - Database for EDC (persistence disabled for development)
+- **🌐 Ingress Controller** - nginx-ingress for external access (managed separately)
 - **🔒 cert-manager** - Automatic SSL certificates via Let's Encrypt
 
 ## ⚙️ Configuration
@@ -73,13 +74,15 @@ tractusx-connector:
     ingresses:
       - hostname: "dataprovider-x-dataplane.your-domain.com"
 
-# Digital Twin Registry
+# Digital Twin Registry (currently disabled)
 digital-twin-registry:
+  enabled: false  # Set to true to enable
   registry:
     host: dataprovider-x-dtr.your-domain.com
 
-# Submodel Server
+# Submodel Server (currently disabled)
 simple-data-backend:
+  enabled: false  # Set to true to enable
   ingress:
     hosts:
       - host: "dataprovider-x-submodelserver.your-domain.com"
@@ -189,17 +192,18 @@ Safe removal with advanced cleanup options:
 
 ### Ingress Controller
 
-Standalone ingress controller management:
+**Note**: Ingress controller management scripts have been removed from this project. The nginx-ingress controller should be managed separately.
 
 ```bash
-# Install nginx-ingress controller
-./install-ingress.sh
+# Verify ingress controller is available
+kubectl get pods -n ingress-nginx
 
-# Remove ingress controller
-./uninstall-ingress.sh
+# If not installed, install via Helm:
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace
 ```
 
-The ingress controller is installed separately to allow independent lifecycle management.
+The ingress controller is managed independently to allow separate lifecycle management.
 
 ## 🏗️ Architecture
 
@@ -207,30 +211,32 @@ The ingress controller is installed separately to allow independent lifecycle ma
 
 ```
 construct-x/
-├── edc/                          # EDC Helm chart and lifecycle scripts
-│   ├── Chart.yaml               # Chart metadata and dependencies
-│   ├── values.yaml              # EDC configuration
-│   ├── install.sh               # Installation script
-│   ├── upgrade.sh               # Upgrade script (NEW)
-│   ├── uninstall.sh             # Uninstallation script
-│   ├── charts/                  # Downloaded dependency charts
-│   └── templates/               # EDC-specific templates
-├── install-ingress.sh           # Ingress controller installation
-├── uninstall-ingress.sh         # Ingress controller removal
-└── README.md                    # This documentation
+├── bruno/                       # API testing collections (Bruno HTTP client)
+│   ├── Construct-X/            # High-level EDC API tests
+│   └── openAPI/                # Detailed Management API tests (V3 & v4alpha)
+├── edc/                        # EDC Helm chart and lifecycle scripts
+│   ├── Chart.yaml             # Chart metadata and dependencies
+│   ├── values.yaml            # EDC configuration
+│   ├── install.sh             # Installation script
+│   ├── upgrade.sh             # Upgrade script
+│   ├── uninstall.sh           # Uninstallation script
+│   ├── charts/                # Downloaded dependency charts
+│   └── templates/             # EDC-specific templates
+├── ub-edge-one/              # Additional edge testing utilities
+└── README.md                 # This documentation
 ```
 
 ### Dependency Chain
 
 ```
 EDC Deployment (eecc-edc)
-├── tractusx-connector (Eclipse Tractus-X)
+├── tractusx-connector (Eclipse Tractus-X) ✅ Active
 │   ├── PostgreSQL database
 │   └── Controlplane + Dataplane
-├── digital-twin-registry (Eclipse Tractus-X)
+├── digital-twin-registry (Eclipse Tractus-X) ⚠️ Disabled
 │   └── PostgreSQL database
-├── simple-data-backend (Eclipse Tractus-X)
-└── vault (HashiCorp)
+├── simple-data-backend (Eclipse Tractus-X) ⚠️ Disabled
+└── vault (HashiCorp) ✅ Active (dev mode)
 ```
 
 ### Network Architecture
@@ -247,12 +253,12 @@ Ingress Resources (with SSL termination)
 │                                         │
 │ ┌─────────────┐  ┌─────────────────────┐│
 │ │ EDC         │  │ Digital Twin        ││
-│ │ Controlplane│  │ Registry            ││
+│ │ Controlplane│  │ Registry (DISABLED) ││
 │ └─────────────┘  └─────────────────────┘│
 │                                         │
 │ ┌─────────────┐  ┌─────────────────────┐│
 │ │ EDC         │  │ Submodel            ││
-│ │ Dataplane   │  │ Server              ││
+│ │ Dataplane   │  │ Server (DISABLED)   ││
 │ └─────────────┘  └─────────────────────┘│
 │                                         │
 │ ┌─────────────┐  ┌─────────────────────┐│
@@ -260,6 +266,37 @@ Ingress Resources (with SSL termination)
 │ │ Vault       │  │ Databases           ││
 │ └─────────────┘  └─────────────────────┘│
 └─────────────────────────────────────────┘
+```
+
+## 🧪 API Testing and Development Tools
+
+### Bruno HTTP Client Collections
+
+The project includes comprehensive API testing collections for the Bruno HTTP client:
+
+#### High-Level EDC Testing (`bruno/Construct-X/`)
+- Contract negotiations and asset management
+- Data transfer operations
+- SSI DIM Wallet integration tests
+- Environment configurations for different deployments
+
+#### Detailed Management API Testing (`bruno/openAPI/management-api/`)
+- **V3 APIs**: Asset, Catalog, Contract Definition, Contract Negotiation, Transfer Process
+- **v4alpha APIs**: Next-generation API versions for testing
+- **Specialized APIs**: EDR Cache, Policy Definition, Secret management
+- Complete CRUD operations for all EDC resources
+
+### Deployment Testing
+
+```bash
+# Comprehensive deployment verification
+./test-deployment.sh
+
+# Test specific endpoints
+curl -k https://dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de/api/v1/management/health
+
+# Check all deployed services
+kubectl get all -n edc
 ```
 
 ## 🔧 Troubleshooting
@@ -371,16 +408,38 @@ helm rollback eecc-edc 2 -n edc
 
 ## 🚀 Deployment Strategies
 
+### Current Development Configuration
+
+The default configuration is optimized for development and testing:
+
+```yaml
+# Current active configuration
+seedTestdata: true                    # Test data seeding enabled
+vault.server.dev.enabled: true       # Vault in dev mode
+postgresql.primary.persistence.enabled: false  # Non-persistent storage
+digital-twin-registry.enabled: false # DTR disabled
+simple-data-backend.enabled: false   # Submodel server disabled
+```
+
+**Active Components:**
+- ✅ EDC Controlplane + Dataplane
+- ✅ HashiCorp Vault (dev mode)
+- ✅ PostgreSQL (non-persistent)
+
 ### Development Environment
 
 ```bash
-# 1. Install with test data
+# 1. Install with current development settings
 ./edc/install.sh
+
+# 2. Verify deployment
+./test-deployment.sh
 
 # Configuration includes:
 # - seedTestdata: true
-# - Lower resource limits
-# - Development domains
+# - Non-persistent storage
+# - Development-friendly resource limits
+# - SSL certificates with current domains
 ```
 
 ### Production Environment
@@ -390,15 +449,16 @@ helm rollback eecc-edc 2 -n edc
 vim edc/values.yaml
 # Set:
 # - seedTestdata: false
+# - vault.server.dev.enabled: false
+# - postgresql.primary.persistence.enabled: true
+# - digital-twin-registry.enabled: true (if needed)
+# - simple-data-backend.enabled: true (if needed)
 # - Production domains
 # - Appropriate resource limits
-# - Secure passwords
+# - Secure passwords and secrets
 
 # 2. Install with production settings
 ./edc/install.sh
-
-# 3. Verify deployment
-kubectl get pods -n edc
 ```
 
 ### Staging Environment
@@ -407,6 +467,20 @@ kubectl get pods -n edc
 # Use production-like configuration with staging domains
 # Test upgrade procedures before production
 ./edc/upgrade.sh --dry-run
+```
+
+### Enabling Additional Components
+
+To enable the currently disabled components:
+
+```yaml
+# Enable Digital Twin Registry
+digital-twin-registry:
+  enabled: true
+
+# Enable Submodel Server
+simple-data-backend:
+  enabled: true
 ```
 
 ## 📚 Additional Resources
@@ -439,4 +513,8 @@ For issues and questions:
 
 ---
 
-**⚠️ Important**: Update all domain names in `edc/values.yaml` to match your actual domains before deployment!
+**⚠️ Important Notes**:
+- Update all domain names in `edc/values.yaml` to match your actual domains before deployment!
+- Current configuration uses `construct-x.prod-k8s.eecc.de` - replace with your domain
+- For production: Enable persistence, disable dev mode, and configure proper secrets
+- Digital Twin Registry and Submodel Server are currently disabled - enable if needed

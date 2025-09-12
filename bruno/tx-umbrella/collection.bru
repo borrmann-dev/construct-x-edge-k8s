@@ -1,0 +1,34 @@
+meta {
+  name: tx-umbrella
+}
+
+auth {
+  mode: none
+}
+
+vars:pre-request {
+  providerUrl: https://dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de
+  consumerUrl: https://dataprovider-x-controlplane.construct-x.borrmann.dev
+  contractPermissions: 
+  contractProhibitions: []
+  contractObligations: []
+  offerId: YXNzZXQtNS1jb250cmFjdA==:YXNzZXQtNQ==:MTI5MGU5YTAtMDI2YS00YjUyLTlkMzEtYmRmN2Q1MjU0ZTYz
+  negotiationId: 
+  contractAgreementId: 
+  edrNegotiationId: 
+  transferProcessId: 
+  providerBpn: BPNL00000000080L
+  consumerBpn: BPNL00000000080L
+  authCode: 
+  dataplanePublicEndpoint: 
+  assetId: asset-1
+  policyId: {{assetId}}-policy
+  submodelServer: https://submodelserver.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+  transferId: 
+  providerApiKey: TEST2
+  consumerApiKey: TEST2
+  walletUrl: https://ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+  contractDefinitionId: {{assetId}}-contract
+  centralidpUrl: https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+  portalBackendUrl: https://portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io
+}

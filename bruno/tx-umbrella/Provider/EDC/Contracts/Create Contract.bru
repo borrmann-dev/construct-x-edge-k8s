@@ -1,0 +1,38 @@
+meta {
+  name: Create Contract
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{providerUrl}}/management/v3/contractdefinitions
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+body:json {
+  {
+      "@context": {},
+      "@id": "{{contractDefinitionId}}",
+      "@type": "ContractDefinition",
+      "accessPolicyId": "{{policyId}}",
+      "contractPolicyId": "{{policyId}}",
+      "assetsSelector": {
+          "@type": "CriterionDto",
+          "operandLeft": "https://w3id.org/edc/v0.0.1/ns/id",
+          "operator": "=",
+          "operandRight": "{{assetId}}"
+      }
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+}

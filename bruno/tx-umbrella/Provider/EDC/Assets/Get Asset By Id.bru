@@ -1,0 +1,21 @@
+meta {
+  name: Get Asset By Id
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{providerUrl}}/management/v3/assets/{{assetId}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

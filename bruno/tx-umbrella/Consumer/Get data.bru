@@ -1,0 +1,20 @@
+meta {
+  name: Get data
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{dataplanePublicEndpoint}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: {{authCode}}
+  ~Content-Type: text/plain
+}
+
+settings {
+  encodeUrl: true
+}

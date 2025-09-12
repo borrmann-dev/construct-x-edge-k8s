@@ -1,0 +1,21 @@
+meta {
+  name: Delete Contract
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{providerUrl}}/management/v3/contractdefinitions/{{contractDefinitionId}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Get Contract By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{providerUrl}}/management/v3/contractdefinitions/{{contractDefinitionId}}
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{providerApiKey}}
+  placement: header
+}
+
+settings {
+  encodeUrl: true
+}

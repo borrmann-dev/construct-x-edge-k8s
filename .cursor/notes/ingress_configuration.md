@@ -14,11 +14,11 @@ tractusx-connector:
   controlplane:
     ingresses:
       - enabled: true
-        hostname: "dataprovider-x-controlplane.construct-x.borrmann.dev"
+        hostname: "dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de"
         endpoints: ["default", "protocol", "management"]
         className: "nginx"
         annotations:
-          cert-manager.io/cluster-issuer: letsencrypt-prod
+          cert-manager.io/cluster-issuer: prod-eecc
           nginx.ingress.kubernetes.io/ssl-redirect: "false"
         tls:
           enabled: true
@@ -30,45 +30,46 @@ tractusx-connector:
   dataplane:
     ingresses:
       - enabled: true
-        hostname: "dataprovider-x-dataplane.construct-x.borrmann.dev"
+        hostname: "dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de"
         endpoints: ["default", "public"]
         className: "nginx"
         annotations:
-          cert-manager.io/cluster-issuer: letsencrypt-prod
+          cert-manager.io/cluster-issuer: prod-eecc
           nginx.ingress.kubernetes.io/ssl-redirect: "false"
         tls:
           enabled: true
 ```
 
-#### Digital Twin Registry
+#### Digital Twin Registry (DISABLED)
 ```yaml
 digital-twin-registry:
+  enabled: false  # Currently disabled in deployment
   registry:
     ingress:
       enabled: true
       className: "nginx"
-      host: dataprovider-x-dtr.construct-x.borrmann.dev
+      host: dataprovider-x-dtr.construct-x.prod-k8s.eecc.de
       tls: true
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
-        nginx.ingress.kubernetes.io/rewrite-target: /$2
-        nginx.ingress.kubernetes.io/x-forwarded-prefix: /semantics/registry
+        cert-manager.io/cluster-issuer: prod-eecc
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
 ```
 
-#### Submodel Server
+#### Submodel Server (DISABLED)
 ```yaml
 simple-data-backend:
+  enabled: false  # Currently disabled in deployment
   ingress:
     enabled: true
     className: "nginx"
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: prod-eecc
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
     tls:
       - secretName: "submodelserver.tx.constructx-tls"
-        hosts: ["dataprovider-x-submodelserver.construct-x.borrmann.dev"]
+        hosts: ["dataprovider-x-submodelserver.construct-x.prod-k8s.eecc.de"]
     hosts:
-      - host: "dataprovider-x-submodelserver.construct-x.borrmann.dev"
+      - host: "dataprovider-x-submodelserver.construct-x.prod-k8s.eecc.de"
         paths: [{"path": "/", "pathType": "Prefix"}]
 ```
 
@@ -84,7 +85,7 @@ simple-data-backend:
 ### Domain Configuration
 Update all hostnames in `edc/values.yaml` to match your domain:
 ```yaml
-# Replace construct-x.borrmann.dev with your domain
+# Replace construct-x.prod-k8s.eecc.de with your domain
 hostname: "dataprovider-x-controlplane.your-domain.com"
 ```
 
@@ -92,7 +93,7 @@ hostname: "dataprovider-x-controlplane.your-domain.com"
 All ingresses automatically get SSL via these annotations:
 ```yaml
 annotations:
-  cert-manager.io/cluster-issuer: letsencrypt-prod
+  cert-manager.io/cluster-issuer: prod-eecc
   nginx.ingress.kubernetes.io/ssl-redirect: "false"
 ```
 
@@ -115,7 +116,7 @@ kubectl describe ingress <ingress-name> -n edc
 kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
 
 # Test ingress connectivity
-curl -v https://dataprovider-x-controlplane.construct-x.borrmann.dev
+curl -v https://dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de
 ```
 
 The ingress configuration is automatically managed by the EDC installation scripts!

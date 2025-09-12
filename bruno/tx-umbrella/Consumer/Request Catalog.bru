@@ -1,0 +1,72 @@
+meta {
+  name: Request Catalog
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{consumerUrl}}/management/v3/catalog/request
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{consumerApiKey}}
+  placement: header
+}
+
+body:json {
+  {
+      "@context": {
+          "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+          "odrl": "http://www.w3.org/ns/odrl/2/",
+          "dct": "http://purl.org/dc/terms/"
+      },
+      "@type": "CatalogRequest",
+      "counterPartyId": "{{providerBpn}}",
+      "counterPartyAddress": "{{providerUrl}}/api/v1/dsp",
+      "protocol": "dataspace-protocol-http"
+  }
+  
+  
+}
+
+script:post-response {
+  const assetId = bru.getCollectionVar("assetId");
+  
+  const json = res.getBody();
+  
+  // dcat:dataset kann Objekt oder Array sein -> normalisieren
+  const dsRaw = json["dcat:dataset"];
+  let datasets = Array.isArray(dsRaw) ? dsRaw : (dsRaw ? [dsRaw] : []);
+  
+  const ds = datasets.find(d => d && (d.id === assetId || d["@id"] === assetId));
+  if (!ds) throw new Error(`Dataset mit id '${assetId}' nicht gefunden.`);
+  
+  // odrl:hasPolicy kann Objekt oder Array sein -> normalisieren
+  let policies = ds["odrl:hasPolicy"] ?? [];
+  if (!Array.isArray(policies)) policies = [policies];
+  
+  // erste Policy nehmen
+  const policy = policies[0] || {};
+  bru.setVar("offerId", policy["@id"] || "");
+  
+  // Felder extrahieren und stringifizieren
+  const permission  = policy["odrl:permission"]  ?? [];
+  const prohibition = policy["odrl:prohibition"] ?? [];
+  const obligation  = policy["odrl:obligation"]  ?? [];
+  
+  bru.setVar("contractPermissions",  JSON.stringify(permission));
+  bru.setVar("contractProhibitions", JSON.stringify(prohibition));
+  bru.setVar("contractObligations",  JSON.stringify(obligation));
+  
+  // Safeties
+  if (!bru.getVar("contractPermissions"))  bru.setVar("contractPermissions",  "[]");
+  if (!bru.getVar("contractProhibitions")) bru.setVar("contractProhibitions", "[]");
+  if (!bru.getVar("contractObligations"))  bru.setVar("contractObligations",  "[]");
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,51 @@
+meta {
+  name: Init EDR
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{consumerUrl}}/management/v3/edrs
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{consumerApiKey}}
+  placement: header
+}
+
+body:json {
+  {
+      "@context": [
+          "https://w3id.org/tractusx/policy/v1.0.0",
+          "http://www.w3.org/ns/odrl.jsonld",
+          {
+              "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+          }
+      ],
+      "@type": "ContractRequest",
+      "counterPartyAddress": "{{providerUrl}}/api/v1/dsp",
+      "protocol": "dataspace-protocol-http",
+      "policy": {
+        "@id": "{{offerId}}",
+        "@type": "odrl:Offer",
+        "assigner": "{{providerBpn}}",
+        "target": "{{assetId}}",
+        "odrl:permission": {{contractPermissions}},
+        "odrl:prohibition": {{contractProhibitions}},
+        "odrl:obligation": {{contractObligations}}
+      },
+      "callbackAddresses": []
+  }
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  bru.setVar("edrNegotiationId", jsonData["@id"]);
+}
+
+settings {
+  encodeUrl: true
+}

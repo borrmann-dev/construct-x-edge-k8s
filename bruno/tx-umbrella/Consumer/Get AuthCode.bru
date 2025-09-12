@@ -1,0 +1,27 @@
+meta {
+  name: Get AuthCode
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{consumerUrl}}/management/v3/edrs/{{transferProcessId}}/dataaddress
+  body: none
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{consumerApiKey}}
+  placement: header
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  bru.setVar("authCode", jsonData["authorization"]);
+  bru.setVar("dataplanePublicEndpoint", jsonData["endpoint"]);
+}
+
+settings {
+  encodeUrl: true
+}

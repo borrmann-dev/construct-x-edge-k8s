@@ -1,0 +1,43 @@
+meta {
+  name: Query Cached EDR
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{consumerUrl}}/management/v3/edrs/request
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-Api-Key
+  value: {{consumerApiKey}}
+  placement: header
+}
+
+body:json {
+  {
+      "@context": {
+          "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      },
+      "@type": "QuerySpec",
+      "filterExpression": [
+          {
+              "operandLeft": "contractNegotiationId",
+              "operator": "=",
+              "operandRight": "{{edrNegotiationId}}"
+          }
+      ]
+  }
+}
+
+script:post-response {
+  var jsonData = res.getBody();
+  bru.setVar("transferProcessId", jsonData.at(-1)["transferProcessId"]);
+  
+}
+
+settings {
+  encodeUrl: true
+}

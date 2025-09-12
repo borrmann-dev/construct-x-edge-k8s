@@ -6,51 +6,56 @@ This is a comprehensive Helm-based deployment for the construct-x edge infrastru
 ## Current Project Structure
 ```
 construct-x/
-├── edc/                          # EDC Helm chart and lifecycle scripts
-│   ├── Chart.yaml               # EDC chart metadata and dependencies
-│   ├── values.yaml              # EDC configuration (tractusx-connector, DTR, vault, etc.)
-│   ├── install.sh               # EDC installation script
-│   ├── upgrade.sh               # EDC upgrade script (NEW)
-│   ├── uninstall.sh             # EDC uninstallation script
-│   ├── charts/                  # Dependency charts (downloaded)
-│   └── templates/               # EDC-specific templates
-├── install-ingress.sh           # Standalone ingress controller installation
-├── uninstall-ingress.sh         # Standalone ingress controller removal
-└── README.md                    # Main documentation
+├── bruno/                       # API testing collections (Bruno HTTP client)
+│   └── tx-umbrella/            # Comprehensive Construct-X EDC API collection
+│       ├── Provider/           # Provider-side APIs (Assets, Policies, Contracts)
+│       ├── Consumer/           # Consumer-side APIs (Catalog, EDR, Data Access)
+│       ├── Authentication/     # Central IDP and SSI integration
+│       ├── Portal-Backend/     # Construct-X Portal integration
+│       └── SSI DIM Wallet/     # Decentralized Identity Management
+├── edc/                        # EDC Helm chart and lifecycle scripts
+│   ├── Chart.yaml             # EDC chart metadata and dependencies
+│   ├── values.yaml            # EDC configuration (tractusx-connector, vault, etc.)
+│   ├── install.sh             # EDC installation script
+│   ├── upgrade.sh             # EDC upgrade script
+│   ├── uninstall.sh           # EDC uninstallation script
+│   ├── charts/                # Dependency charts (downloaded)
+│   └── templates/             # EDC-specific templates
+├── test-deployment.sh         # Comprehensive deployment testing script
+├── ub-edge-one/              # Additional edge testing utilities
+└── README.md                 # Main documentation
+
+**NOTE**: install-ingress.sh and uninstall-ingress.sh have been removed from the project.
 
 ## Architecture Overview
 
-### EDC Components
+### Currently Deployed Components (ACTIVE)
 - **Eclipse Dataspace Connector (tractusx-connector)**: Main EDC implementation with controlplane and dataplane
-- **Digital Twin Registry**: Asset registry for digital twins and submodels
-- **Simple Data Backend**: Submodel server providing actual data
-- **HashiCorp Vault**: Secrets management for EDC keys and certificates
-- **PostgreSQL**: Database backend for EDC and DTR
+- **HashiCorp Vault**: Secrets management for EDC keys and certificates (dev mode)
+- **PostgreSQL**: Database backend for EDC (persistence disabled for development)
+
+### Available but DISABLED Components
+- **Digital Twin Registry**: Asset registry for digital twins and submodels (enabled: false)
+- **Simple Data Backend**: Submodel server providing actual data (enabled: false)
 
 ### Infrastructure Components
-- **Ingress Controller**: nginx-ingress for external access
+- **Ingress Controller**: nginx-ingress for external access (managed separately)
 - **Certificate Management**: cert-manager with Let's Encrypt for SSL
 - **Namespace**: `edc` (default) for all EDC components
 
-### Service Endpoints (External)
-- **EDC Controlplane**: `dataprovider-x-controlplane.construct-x.borrmann.dev`
-- **EDC Dataplane**: `dataprovider-x-dataplane.construct-x.borrmann.dev`
-- **Digital Twin Registry**: `dataprovider-x-dtr.construct-x.borrmann.dev`
-- **Submodel Server**: `dataprovider-x-submodelserver.construct-x.borrmann.dev`
+### Current Service Endpoints (External)
+- **EDC Controlplane**: `dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de`
+- **EDC Dataplane**: `dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de`
+
+### Disabled Service Endpoints
+- **Digital Twin Registry**: Not deployed (component disabled)
+- **Submodel Server**: Not deployed (component disabled)
 
 ## Lifecycle Management Scripts
 
 ### Infrastructure Scripts
-- **Install Ingress**: `install-ingress.sh` - Standalone ingress controller installation
-  - Installs nginx-ingress-controller in `ingress-nginx` namespace
-  - Configures LoadBalancer service for external access
-  - Independent of EDC installation
-  - Usage: `./install-ingress.sh [OPTIONS]`
-
-- **Uninstall Ingress**: `uninstall-ingress.sh` - Safe ingress controller removal
-  - Removes nginx-ingress-controller and namespace
-  - Confirmation prompts for safety
-  - Usage: `./uninstall-ingress.sh [OPTIONS]`
+**REMOVED**: `install-ingress.sh` and `uninstall-ingress.sh` are no longer part of the project.
+Ingress controller management is now handled separately from this deployment.
 
 ### EDC Application Scripts
 - **Install**: `edc/install.sh` - Complete EDC installation with all dependencies
@@ -85,9 +90,9 @@ construct-x/
 ## Deployment Strategies
 
 ### Complete Fresh Installation
-1. **Install Ingress Controller**: `./install-ingress.sh`
+1. **Ensure Ingress Controller**: Verify nginx-ingress is available in cluster
 2. **Install EDC**: `./edc/install.sh`
-3. **Verify**: Check endpoints and certificates
+3. **Verify**: Check endpoints and certificates using `./test-deployment.sh`
 
 ### Upgrade Existing Installation
 1. **Backup & Upgrade**: `./edc/upgrade.sh` (automatic backup)
@@ -96,7 +101,7 @@ construct-x/
 
 ### Safe Removal
 1. **Remove EDC**: `./edc/uninstall.sh`
-2. **Remove Ingress** (optional): `./uninstall-ingress.sh`
+2. **Ingress Controller**: Managed separately (not part of this deployment)
 
 ## Configuration Management
 
@@ -138,9 +143,50 @@ construct-x/
 - Resolution for Helm secret size limit errors (1MB limit)
 - Alternative installation approach for large charts
 
+## API Testing and Development Tools
+
+### Bruno HTTP Client Collections
+- **`bruno/tx-umbrella/`**: Comprehensive EDC API testing collection for Construct-X
+  - **Provider APIs**: Asset, Policy, Contract, Agreement Management (Management API v3)
+  - **Consumer APIs**: Catalog Discovery, EDR Negotiation, Data Access
+  - **Authentication**: Central IDP integration, SSI DIM Wallet management
+  - **Portal Integration**: Connector registration, Clearing House integration
+  - **Submodel Server**: Digital Product Passport data upload/retrieval
+  - **Complete Workflows**: End-to-end Provider setup and Consumer data access flows
+  - **Construct-X Ecosystem**: BPN-based policies, Catena-X data models, Dataspace Protocol HTTP
+
+### DSP Workflow Automation
+- **`scripts/dsp-workflow.sh`**: Fully automated DSP workflow script
+  - **Complete Automation**: End-to-end workflow from provider setup to successful data retrieval
+  - **Smart Resource Management**: Checks and reuses existing resources to avoid conflicts
+  - **Dynamic Response Parsing**: Automatically extracts IDs, tokens, and endpoints from API responses
+  - **Environment Configuration**: Flexible setup via `.env` file with all required parameters
+  - **Comprehensive Error Handling**: User-friendly output with detailed error messages and health checks
+  - **Debug Mode**: Optional verbose output with `DEBUG=true` for troubleshooting
+  - **Clean Output**: Formatted JSON payloads for requests and responses
+  - **Configurable Data Source**: `DATA_SOURCE_URL` can be overridden in `.env` file
+
+### Deployment Testing
+- **`test-deployment.sh`**: Comprehensive deployment verification script
+  - Tests all deployed endpoints for availability
+  - Validates SSL certificates and ingress configuration
+  - Checks pod health and resource usage
+  - Provides detailed deployment status report
+
+### Current Deployment Status (as of analysis)
+- **Deployment**: `eecc-edc` in namespace `edc`
+- **Components**: EDC Controlplane + Dataplane, PostgreSQL, HashiCorp Vault
+- **Status**: All pods running and healthy
+- **Post-install Jobs**: Vault setup and test data upload completed successfully
+- **SSL Certificates**: Valid and ready
+- **External Access**: Available via nginx-ingress
+
 ## Related Files
 
+- **[bruno_api_collection.md](bruno_api_collection.md)** - Comprehensive Bruno API collection documentation for Construct-X EDC workflows
+- **[current_deployment.md](current_deployment.md)** - Current deployment status, configuration, and resource usage
 - **[ingress_configuration.md](ingress_configuration.md)** - Ingress setup and configuration options
 - **[certificate_management.md](certificate_management.md)** - SSL certificate and ClusterIssuer configuration
 - **[service_testing.md](service_testing.md)** - Service testing and health check procedures
+- **[helm_secret_size_issue.md](helm_secret_size_issue.md)** - Troubleshooting for Helm secret size limitations
 
