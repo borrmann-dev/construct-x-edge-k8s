@@ -41,10 +41,10 @@ kubectl get ingress -n edc
 
 | Component | Purpose | Status | External URL |
 |-----------|---------|--------|---------------|
-| **EDC Controlplane** | DSP Protocol, Management API | ✅ Active | `dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de` |
-| **EDC Dataplane** | Data Transfer, Public API | ✅ Active | `dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de` |
-| **Digital Twin Registry** | Asset Registry | ⚠️ Disabled | `dataprovider-x-dtr.construct-x.prod-k8s.eecc.de` |
-| **Submodel Server** | Data Backend | ⚠️ Disabled | `dataprovider-x-submodelserver.construct-x.prod-k8s.eecc.de` |
+| **EDC Controlplane** | DSP Protocol, Management API | ✅ Active | `dataprovider-x-controlplane.construct-x.borrmann.dev` |
+| **EDC Dataplane** | Data Transfer, Public API | ✅ Active | `dataprovider-x-dataplane.construct-x.borrmann.dev` |
+| **Digital Twin Registry** | Asset Registry | ⚠️ Disabled | `dataprovider-x-dtr.construct-x.borrmann.dev` |
+| **Submodel Server** | Data Backend | ⚠️ Disabled | `dataprovider-x-submodelserver.construct-x.borrmann.dev` |
 
 ### 🏗️ Supporting Infrastructure
 
@@ -68,24 +68,24 @@ tractusx-connector:
   # Ingress hostnames (update these!)
   controlplane:
     ingresses:
-      - hostname: "dataprovider-x-controlplane.your-domain.com"
+      - hostname: "dataprovider-x-controlplane.construct-x.borrmann.dev"
   
   dataplane:
     ingresses:
-      - hostname: "dataprovider-x-dataplane.your-domain.com"
+      - hostname: "dataprovider-x-dataplane.construct-x.borrmann.dev"
 
 # Digital Twin Registry (currently disabled)
 digital-twin-registry:
   enabled: false  # Set to true to enable
   registry:
-    host: dataprovider-x-dtr.your-domain.com
+    host: dataprovider-x-dtr.construct-x.borrmann.dev
 
 # Submodel Server (currently disabled)
 simple-data-backend:
   enabled: false  # Set to true to enable
   ingress:
     hosts:
-      - host: "dataprovider-x-submodelserver.your-domain.com"
+      - host: "dataprovider-x-submodelserver.construct-x.borrmann.dev"
 
 # Test data seeding (disable in production)
 seedTestdata: true
@@ -212,8 +212,10 @@ The ingress controller is managed independently to allow separate lifecycle mana
 ```
 construct-x/
 ├── bruno/                       # API testing collections (Bruno HTTP client)
-│   ├── Construct-X/            # High-level EDC API tests
-│   └── openAPI/                # Detailed Management API tests (V3 & v4alpha)
+│   └── tx-umbrella/            # Comprehensive Construct-X EDC API collection
+│       ├── Provider/EDC/       # Provider APIs (Assets, Policies, Contracts, Agreements)
+│       ├── Consumer/           # Consumer APIs (Catalog, EDR, Data Access)
+│       └── environments/       # Environment configurations
 ├── edc/                        # EDC Helm chart and lifecycle scripts
 │   ├── Chart.yaml             # Chart metadata and dependencies
 │   ├── values.yaml            # EDC configuration
@@ -222,8 +224,14 @@ construct-x/
 │   ├── uninstall.sh           # Uninstallation script
 │   ├── charts/                # Downloaded dependency charts
 │   └── templates/             # EDC-specific templates
-├── ub-edge-one/              # Additional edge testing utilities
-└── README.md                 # This documentation
+├── scripts/                    # Utility scripts for deployment and testing
+│   ├── dsp-workflow.sh        # Automated DSP workflow script
+│   ├── cleanup.sh             # Cleanup utilities
+│   └── README.md              # Scripts documentation
+├── install-ingress.sh          # Ingress controller installation script
+├── uninstall-ingress.sh        # Ingress controller uninstallation script
+├── test-deployment.sh          # Comprehensive deployment testing script
+└── README.md                   # This documentation
 ```
 
 ### Dependency Chain
@@ -274,17 +282,11 @@ Ingress Resources (with SSL termination)
 
 The project includes comprehensive API testing collections for the Bruno HTTP client:
 
-#### High-Level EDC Testing (`bruno/Construct-X/`)
-- Contract negotiations and asset management
-- Data transfer operations
-- SSI DIM Wallet integration tests
-- Environment configurations for different deployments
-
-#### Detailed Management API Testing (`bruno/openAPI/management-api/`)
-- **V3 APIs**: Asset, Catalog, Contract Definition, Contract Negotiation, Transfer Process
-- **v4alpha APIs**: Next-generation API versions for testing
-- **Specialized APIs**: EDR Cache, Policy Definition, Secret management
-- Complete CRUD operations for all EDC resources
+#### Comprehensive EDC Testing (`bruno/tx-umbrella/`)
+- **Provider APIs**: Asset, Policy, Contract, Agreement Management (Management API v3)
+- **Consumer APIs**: Catalog Discovery, EDR Negotiation, Data Access
+- **Complete Workflows**: End-to-end Provider setup and Consumer data access flows
+- **Environment configurations**: Flexible setup for different deployments
 
 ### Deployment Testing
 
@@ -293,7 +295,7 @@ The project includes comprehensive API testing collections for the Bruno HTTP cl
 ./test-deployment.sh
 
 # Test specific endpoints
-curl -k https://dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de/api/v1/management/health
+curl -k https://dataprovider-x-controlplane.construct-x.borrmann.dev/api/v1/management/health
 
 # Check all deployed services
 kubectl get all -n edc
@@ -515,6 +517,6 @@ For issues and questions:
 
 **⚠️ Important Notes**:
 - Update all domain names in `edc/values.yaml` to match your actual domains before deployment!
-- Current configuration uses `construct-x.prod-k8s.eecc.de` - replace with your domain
+- Current configuration uses `construct-x.borrmann.dev` - replace with your domain
 - For production: Enable persistence, disable dev mode, and configure proper secrets
 - Digital Twin Registry and Submodel Server are currently disabled - enable if needed

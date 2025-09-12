@@ -170,7 +170,7 @@ digital-twin-registry:
 
 simple-data-backend:
   nameOverride: dataprovider-x-submodelserver
-  enabled: true
+  enabled: false
   image:
     tag: "main"
   ingress:

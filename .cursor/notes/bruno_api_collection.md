@@ -10,16 +10,14 @@ Die Bruno Collection `tx-umbrella` enthält umfassende API-Tests für Eclipse Da
 - **Collection Name**: `tx-umbrella`
 - **Bruno Version**: 1
 - **Hauptvariablen** (in `collection.bru`):
-  - `providerUrl`: `https://dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de`
+  - `providerUrl`: `https://dataprovider-x-controlplane.construct-x.borrmann.dev`
   - `consumerUrl`: `https://dataprovider-x-controlplane.construct-x.borrmann.dev`
   - `providerBpn`/`consumerBpn`: `BPNL00000000080L`
   - `providerApiKey`/`consumerApiKey`: `TEST2`
 
 ### Externe Services
-- **SSI DIM Wallet**: `https://ssi-dim-wallet-stub.e34eabb8a136438fafe9.germanywestcentral.aksapp.io`
-- **Central IDP**: `https://centralidp.e34eabb8a136438fafe9.germanywestcentral.aksapp.io`
-- **Portal Backend**: `https://portal-backend.e34eabb8a136438fafe9.germanywestcentral.aksapp.io`
-- **Submodel Server**: `https://submodelserver.e34eabb8a136438fafe9.germanywestcentral.aksapp.io`
+- **SSI DIM Wallet**: `https://ssi-dim-wallet-stub.construct-x.net`
+- **Submodel Server**: `https://dataprovider-x-submodelserver.construct-x.borrmann.dev`
 
 ## API-Kategorien und Workflows
 

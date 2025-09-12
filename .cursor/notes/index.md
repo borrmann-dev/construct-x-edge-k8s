@@ -9,10 +9,13 @@ construct-x/
 ├── bruno/                       # API testing collections (Bruno HTTP client)
 │   └── tx-umbrella/            # Comprehensive Construct-X EDC API collection
 │       ├── Provider/           # Provider-side APIs (Assets, Policies, Contracts)
+│       │   └── EDC/           # EDC Management API endpoints
+│       │       ├── Assets/    # Asset management (CRUD operations)
+│       │       ├── Policies/  # Policy definitions
+│       │       ├── Contracts/ # Contract definitions
+│       │       └── Agreements/ # Agreement management
 │       ├── Consumer/           # Consumer-side APIs (Catalog, EDR, Data Access)
-│       ├── Authentication/     # Central IDP and SSI integration
-│       ├── Portal-Backend/     # Construct-X Portal integration
-│       └── SSI DIM Wallet/     # Decentralized Identity Management
+│       └── environments/       # Environment configurations
 ├── edc/                        # EDC Helm chart and lifecycle scripts
 │   ├── Chart.yaml             # EDC chart metadata and dependencies
 │   ├── values.yaml            # EDC configuration (tractusx-connector, vault, etc.)
@@ -22,10 +25,13 @@ construct-x/
 │   ├── charts/                # Dependency charts (downloaded)
 │   └── templates/             # EDC-specific templates
 ├── test-deployment.sh         # Comprehensive deployment testing script
-├── ub-edge-one/              # Additional edge testing utilities
+├── scripts/                  # Utility scripts for deployment and testing
+│   ├── dsp-workflow.sh      # Automated DSP workflow script
+│   ├── cleanup.sh           # Cleanup utilities
+│   └── README.md            # Scripts documentation
+├── install-ingress.sh        # Ingress controller installation script
+├── uninstall-ingress.sh      # Ingress controller uninstallation script
 └── README.md                 # Main documentation
-
-**NOTE**: install-ingress.sh and uninstall-ingress.sh have been removed from the project.
 
 ## Architecture Overview
 
@@ -44,8 +50,8 @@ construct-x/
 - **Namespace**: `edc` (default) for all EDC components
 
 ### Current Service Endpoints (External)
-- **EDC Controlplane**: `dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de`
-- **EDC Dataplane**: `dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de`
+- **EDC Controlplane**: `dataprovider-x-controlplane.construct-x.borrmann.dev`
+- **EDC Dataplane**: `dataprovider-x-dataplane.construct-x.borrmann.dev`
 
 ### Disabled Service Endpoints
 - **Digital Twin Registry**: Not deployed (component disabled)
@@ -54,8 +60,9 @@ construct-x/
 ## Lifecycle Management Scripts
 
 ### Infrastructure Scripts
-**REMOVED**: `install-ingress.sh` and `uninstall-ingress.sh` are no longer part of the project.
-Ingress controller management is now handled separately from this deployment.
+- **Install Ingress**: `install-ingress.sh` - Ingress controller installation
+- **Uninstall Ingress**: `uninstall-ingress.sh` - Ingress controller removal
+- **Note**: Ingress controller can be managed separately from EDC deployment
 
 ### EDC Application Scripts
 - **Install**: `edc/install.sh` - Complete EDC installation with all dependencies
@@ -90,7 +97,7 @@ Ingress controller management is now handled separately from this deployment.
 ## Deployment Strategies
 
 ### Complete Fresh Installation
-1. **Ensure Ingress Controller**: Verify nginx-ingress is available in cluster
+1. **Optional - Install Ingress Controller**: `./install-ingress.sh` (or verify existing)
 2. **Install EDC**: `./edc/install.sh`
 3. **Verify**: Check endpoints and certificates using `./test-deployment.sh`
 
@@ -101,7 +108,7 @@ Ingress controller management is now handled separately from this deployment.
 
 ### Safe Removal
 1. **Remove EDC**: `./edc/uninstall.sh`
-2. **Ingress Controller**: Managed separately (not part of this deployment)
+2. **Optional - Remove Ingress Controller**: `./uninstall-ingress.sh`
 
 ## Configuration Management
 
@@ -173,12 +180,12 @@ Ingress controller management is now handled separately from this deployment.
   - Checks pod health and resource usage
   - Provides detailed deployment status report
 
-### Current Deployment Status (as of analysis)
+### Current Deployment Configuration
 - **Deployment**: `eecc-edc` in namespace `edc`
-- **Components**: EDC Controlplane + Dataplane, PostgreSQL, HashiCorp Vault
-- **Status**: All pods running and healthy
-- **Post-install Jobs**: Vault setup and test data upload completed successfully
-- **SSL Certificates**: Valid and ready
+- **Active Components**: EDC Controlplane + Dataplane, PostgreSQL, HashiCorp Vault
+- **Disabled Components**: Digital Twin Registry, Submodel Server
+- **Domain**: `construct-x.borrmann.dev`
+- **SSL Certificates**: Configured with Let's Encrypt
 - **External Access**: Available via nginx-ingress
 
 ## Related Files

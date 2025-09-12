@@ -28,22 +28,23 @@
   - Controlplane: 1.5 CPU, 1024Mi memory
   - Dataplane: 1.5 CPU, 1024Mi memory
 
-## Disabled Components
-- **Digital Twin Registry**: `enabled: false`
-- **Simple Data Backend**: `enabled: false`
-- **Vault Injector**: `enabled: false`
-- **PostgreSQL Persistence**: `enabled: false`
+## Component Status
+### Disabled Components
+- **Digital Twin Registry**: `enabled: false` (DISABLED)
+- **Simple Data Backend**: `enabled: false` (DISABLED)
+- **Vault Injector**: `enabled: false` (DISABLED)
+- **PostgreSQL Persistence**: `enabled: false` (DISABLED)
 
 ## External Access Configuration
 
 ### Ingress Endpoints
-- **Controlplane**: `dataprovider-x-controlplane.construct-x.prod-k8s.eecc.de`
-- **Dataplane**: `dataprovider-x-dataplane.construct-x.prod-k8s.eecc.de`
+- **Controlplane**: `dataprovider-x-controlplane.construct-x.borrmann.dev`
+- **Dataplane**: `dataprovider-x-dataplane.construct-x.borrmann.dev`
 
 ### SSL Configuration
-- **Certificate Issuer**: `prod-eecc` (Let's Encrypt)
+- **Certificate Issuer**: `letsencrypt-prod` (Let's Encrypt)
 - **SSL Redirect**: Disabled (`nginx.ingress.kubernetes.io/ssl-redirect: "false"`)
-- **Certificate Status**: Ready and valid
+- **Certificate Status**: Configured for construct-x.borrmann.dev domain
 
 ### Load Balancer IPs
 - `135.181.220.227`
