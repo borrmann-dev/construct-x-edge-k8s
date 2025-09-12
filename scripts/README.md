@@ -43,41 +43,40 @@ The `dsp-workflow.sh` script automates the complete dataspace protocol workflow 
 #### 1. Provider Setup - Asset Creation
 ```mermaid
 sequenceDiagram
-    participant Consumer
+    participant Provider
     participant EDC_Provider as EDC Provider
-    participant DataSource as Data Source
 
-    Consumer->>EDC_Provider: GET /management/v3/assets/{assetId}
-    EDC_Provider-->>Consumer: 404 Not Found
-    Consumer->>EDC_Provider: POST /management/v3/assets<br/>{asset with dataAddress.baseUrl}
+    Provider->>EDC_Provider: GET /management/v3/assets/{assetId}
+    EDC_Provider-->>Provider: 404 Not Found
+    Provider->>EDC_Provider: POST /management/v3/assets<br/>{asset with dataAddress.baseUrl}
     Note over EDC_Provider: Asset links to Data Source
-    EDC_Provider-->>Consumer: 200 OK {assetId}
+    EDC_Provider-->>Provider: 200 OK {assetId}
 ```
 
 #### 2. Provider Setup - Policy Creation
 ```mermaid
 sequenceDiagram
-    participant Consumer
+    participant Provider
     participant EDC_Provider as EDC Provider
 
-    Consumer->>EDC_Provider: GET /management/v3/policydefinitions/{policyId}
-    EDC_Provider-->>Consumer: 404 Not Found
-    Consumer->>EDC_Provider: POST /management/v3/policydefinitions<br/>{BPN-based access policy}
+    Provider->>EDC_Provider: GET /management/v3/policydefinitions/{policyId}
+    EDC_Provider-->>Provider: 404 Not Found
+    Provider->>EDC_Provider: POST /management/v3/policydefinitions<br/>{BPN-based access policy}
     Note over EDC_Provider: Policy restricts access to Consumer BPN
-    EDC_Provider-->>Consumer: 200 OK {policyId}
+    EDC_Provider-->>Provider: 200 OK {policyId}
 ```
 
 #### 3. Provider Setup - Contract Definition
 ```mermaid
 sequenceDiagram
-    participant Consumer
+    participant Provider
     participant EDC_Provider as EDC Provider
 
-    Consumer->>EDC_Provider: GET /management/v3/contractdefinitions/{contractId}
-    EDC_Provider-->>Consumer: 404 Not Found
-    Consumer->>EDC_Provider: POST /management/v3/contractdefinitions<br/>{links asset + policy}
+    Provider->>EDC_Provider: GET /management/v3/contractdefinitions/{contractId}
+    EDC_Provider-->>Provider: 404 Not Found
+    Provider->>EDC_Provider: POST /management/v3/contractdefinitions<br/>{links asset + policy}
     Note over EDC_Provider: Contract makes asset available under policy
-    EDC_Provider-->>Consumer: 200 OK {contractId}
+    EDC_Provider-->>Provider: 200 OK {contractId}
 ```
 
 #### 4. Consumer Workflow - Catalog Discovery
@@ -112,13 +111,18 @@ sequenceDiagram
 sequenceDiagram
     participant Consumer
     participant EDC_Consumer as EDC Consumer
+    participant EDC_Provider as EDC Provider
 
     loop Polling for EDR completion
         Consumer->>EDC_Consumer: POST /management/v3/edrs/request<br/>{QuerySpec by contractNegotiationId}
-        EDC_Consumer-->>Consumer: 200 OK {[] or [edrEntry]}
+        EDC_Consumer->>EDC_Provider: DSP Transfer Status Query
         alt EDR not ready
+            EDC_Provider-->>EDC_Consumer: DSP Transfer In Progress
+            EDC_Consumer-->>Consumer: 200 OK {[] empty array}
             Consumer->>Consumer: Wait 3 seconds
         else EDR ready
+            EDC_Provider-->>EDC_Consumer: DSP Transfer Complete<br/>{transfer details}
+            EDC_Consumer-->>Consumer: 200 OK {[edrEntry]}
             Consumer->>Consumer: Extract transferProcessId
         end
     end
@@ -129,8 +133,11 @@ sequenceDiagram
 sequenceDiagram
     participant Consumer
     participant EDC_Consumer as EDC Consumer
+    participant EDC_Provider as EDC Provider
 
     Consumer->>EDC_Consumer: GET /management/v3/edrs/{transferProcessId}/dataaddress
+    EDC_Consumer->>EDC_Provider: DSP Authorization Request
+    EDC_Provider-->>EDC_Consumer: DSP Authorization Response<br/>{auth token, dataplane endpoint}
     EDC_Consumer-->>Consumer: 200 OK {authorization, endpoint}
     Note over Consumer: Extract auth code and dataplane endpoint
 ```
