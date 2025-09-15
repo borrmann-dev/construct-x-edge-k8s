@@ -118,12 +118,11 @@ sequenceDiagram
         EDC_Consumer->>EDC_Provider: DSP Contract Negotiation Status Query
         alt EDR not ready
             EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation: In Progress
-            EDC_Consumer-->>Consumer: 200 OK {[] empty array}
-            Consumer->>Consumer: Wait 3 seconds
+            EDC_Consumer-->>Consumer: 200 OK {In Progress}
+            Consumer->>Consumer: Repeat
         else EDR ready
             EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation: Complete<br/>{Contract Agreement details}
-            EDC_Consumer-->>Consumer: 200 OK {[edrEntry]}
-            Consumer->>Consumer: Extract transferProcessId
+            EDC_Consumer-->>Consumer: 200 OK {transferProcessId}
         end
     end
 ```
