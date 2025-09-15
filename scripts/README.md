@@ -137,8 +137,7 @@ sequenceDiagram
     Consumer->>EDC_Consumer: GET /management/v3/edrs/{transferProcessId}/dataaddress
     EDC_Consumer->>EDC_Provider: DSP Authorization Request
     EDC_Provider-->>EDC_Consumer: DSP Authorization Response<br/>{auth token, dataplane endpoint}
-    EDC_Consumer-->>Consumer: 200 OK {authorization, endpoint}
-    Note over Consumer: Extract auth code and dataplane endpoint
+    EDC_Consumer-->>Consumer: 200 OK {auth code, consumer dataplane endpoint}
 ```
 
 #### 8. Data Access
