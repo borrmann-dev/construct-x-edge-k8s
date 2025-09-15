@@ -121,7 +121,7 @@ sequenceDiagram
             EDC_Consumer-->>Consumer: 200 OK {[] empty array}
             Consumer->>Consumer: Wait 3 seconds
         else EDR ready
-            EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation Complete<br/>{Contract Negotiation details}
+            EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation: Complete<br/>{Contract Agreement details}
             EDC_Consumer-->>Consumer: 200 OK {[edrEntry]}
             Consumer->>Consumer: Extract transferProcessId
         end
@@ -155,7 +155,7 @@ sequenceDiagram
     EDC_Provider->>DataSource: <Proxied Method> {configured data source URL}
     DataSource-->>EDC_Provider: 200 OK {actual data}
     EDC_Provider-->>EDC_Consumer: 200 OK {proxied data}
-    EDC_Consumer-->>Consumer: 200 OK {final data}
+    EDC_Consumer-->>Consumer: 200 OK {proxied data}
 ```
 
 ### Setup
