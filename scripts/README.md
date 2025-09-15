@@ -136,8 +136,8 @@ sequenceDiagram
 
     Consumer->>EDC_Consumer: GET /management/v3/edrs/{transferProcessId}/dataaddress
     EDC_Consumer->>EDC_Provider: DSP Authorization Request
-    EDC_Provider-->>EDC_Consumer: DSP Authorization Response<br/>{auth token, dataplane endpoint}
-    EDC_Consumer-->>Consumer: 200 OK {auth code, consumer dataplane endpoint}
+    EDC_Provider-->>EDC_Consumer: DSP Authorization Response<br/>{providerAuthCode, providerDataplaneEndpoint}
+    EDC_Consumer-->>Consumer: 200 OK {consumerAuthCode, consumerDataplaneEndpoint}
 ```
 
 #### 8. Data Access
@@ -148,8 +148,8 @@ sequenceDiagram
     participant EDC_Provider as EDC Provider
     participant DataSource as Data Source
 
-    Consumer->>EDC_Consumer: <GET | POST | PUT | DELETE> {consumer dataplane endpoint}<br/>Authorization: {auth code}
-    EDC_Consumer->>EDC_Provider: <Proxied Method> {provider dataplane endpoint}<br/>Authorization: {provider auth}
+    Consumer->>EDC_Consumer: <GET | POST | PUT | DELETE> {consumerDataplaneEndpoint}<br/>Authorization: {consumerAuthCode}
+    EDC_Consumer->>EDC_Provider: <Proxied Method> {providerDataplaneEndpoint}<br/>Authorization: {providerAuthCode}
     EDC_Provider->>DataSource: <Proxied Method> {configured data source URL}
     DataSource-->>EDC_Provider: 200 OK {actual data}
     EDC_Provider-->>EDC_Consumer: 200 OK {proxied data}
