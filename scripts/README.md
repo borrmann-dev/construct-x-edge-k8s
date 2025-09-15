@@ -114,7 +114,7 @@ sequenceDiagram
     participant EDC_Provider as EDC Provider
 
     loop Polling for EDR completion
-        Consumer->>EDC_Consumer: POST /management/v3/edrs/request<br/>{QuerySpec by contractNegotiationId}
+        Consumer->>EDC_Consumer: POST /management/v3/edrs/request<br/>{QuerySpec by edrNegotiationId}
         EDC_Consumer->>EDC_Provider: DSP Contract Negotiation Status Query
         alt EDR not ready
             EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation: In Progress
