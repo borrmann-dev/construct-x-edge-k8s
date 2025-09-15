@@ -27,9 +27,9 @@ The `dsp-workflow.sh` script automates the complete dataspace protocol workflow 
 ### Workflow Steps
 
 #### Provider Setup
-1. **Asset Creation** - Creates data asset with configurable HTTP data address (reuses if exists)
-2. **Policy Creation** - Creates BPN-based access policy (reuses if exists)
-3. **Contract Definition** - Links asset and policy (reuses if exists)
+1. **Asset Creation** - Creates data asset with configurable HTTP data address
+2. **Policy Creation** - Creates BPN-based access policy
+3. **Contract Definition** - Links asset and policy
 
 #### Consumer Workflow
 1. **Catalog Request** - Discovers available assets from provider
