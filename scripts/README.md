@@ -93,7 +93,7 @@ sequenceDiagram
     Consumer->>Consumer: Parse catalog<br/>Extract offer details
 ```
 
-#### 5. Consumer Workflow - EDR Negotiation
+#### 5. Consumer Workflow - Initialize EDR Negotiation
 ```mermaid
 sequenceDiagram
     participant Consumer
@@ -102,7 +102,7 @@ sequenceDiagram
 
     Consumer->>EDC_Consumer: POST /management/v3/edrs<br/>{ContractRequest with policy}
     EDC_Consumer->>EDC_Provider: DSP Contract Negotiation
-    EDC_Provider-->>EDC_Consumer: DSP Contract Agreement
+    EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation
     EDC_Consumer-->>Consumer: 200 OK {edrNegotiationId}
 ```
 
@@ -115,13 +115,13 @@ sequenceDiagram
 
     loop Polling for EDR completion
         Consumer->>EDC_Consumer: POST /management/v3/edrs/request<br/>{QuerySpec by contractNegotiationId}
-        EDC_Consumer->>EDC_Provider: DSP Transfer Status Query
+        EDC_Consumer->>EDC_Provider: DSP Contract Negotiation Status Query
         alt EDR not ready
-            EDC_Provider-->>EDC_Consumer: DSP Transfer In Progress
+            EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation: In Progress
             EDC_Consumer-->>Consumer: 200 OK {[] empty array}
             Consumer->>Consumer: Wait 3 seconds
         else EDR ready
-            EDC_Provider-->>EDC_Consumer: DSP Transfer Complete<br/>{transfer details}
+            EDC_Provider-->>EDC_Consumer: DSP Contract Negotiation Complete<br/>{Contract Negotiation details}
             EDC_Consumer-->>Consumer: 200 OK {[edrEntry]}
             Consumer->>Consumer: Extract transferProcessId
         end
@@ -150,9 +150,9 @@ sequenceDiagram
     participant EDC_Provider as EDC Provider
     participant DataSource as Data Source
 
-    Consumer->>EDC_Consumer: GET {consumer dataplane endpoint}<br/>Authorization: {auth code}
-    EDC_Consumer->>EDC_Provider: GET {provider dataplane endpoint}<br/>Authorization: {provider auth}
-    EDC_Provider->>DataSource: GET {configured data source URL}
+    Consumer->>EDC_Consumer: <GET | POST | PUT | DELETE> {consumer dataplane endpoint}<br/>Authorization: {auth code}
+    EDC_Consumer->>EDC_Provider: <Proxied Method> {provider dataplane endpoint}<br/>Authorization: {provider auth}
+    EDC_Provider->>DataSource: <Proxied Method> {configured data source URL}
     DataSource-->>EDC_Provider: 200 OK {actual data}
     EDC_Provider-->>EDC_Consumer: 200 OK {proxied data}
     EDC_Consumer-->>Consumer: 200 OK {final data}
